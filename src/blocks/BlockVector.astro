@@ -1,0 +1,23 @@
+---
+import VectorImage from '@components/VectorImage.astro';
+import type { BlockVectorComponentProps } from '@app-types/components.types';
+
+const { image, widthMobile, widthDesktop, widthAlign, metadata } =
+	Astro.props as BlockVectorComponentProps;
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blockVector', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	<div
+		class:list={['flex', 'flex-col', `align-vert--${widthAlign || 'center'}`]}
+	>
+		<VectorImage
+			image={image}
+			widthMobile={widthMobile}
+			widthDesktop={widthDesktop}
+		/>
+	</div>
+</div>

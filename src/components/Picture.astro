@@ -1,0 +1,413 @@
+---
+/**
+ * Picture Component
+ *
+ * A responsive image component that handles:
+ * - Optimal image loading for different screen sizes
+ * - Prevents layout shifts using aspect ratio
+ * - Supports multiple image formats and resolutions
+ * - Works in both production and development environments
+ *
+ * @component
+ * @example
+ * ```astro
+ * <Picture
+ *   src="/images/example.jpg"          // Base image path
+ *   urlFocus="/images/example-focus.jpg"    // Desktop focal point
+ *   urlFocusMobile="/images/example-focus-mobile.jpg"  // Mobile focal point
+ *   width={1200}                       // Original image width
+ *   height={800}                       // Original image height
+ *   name="example-image"               // Image name (used for alt text)
+ *   ratioMobile="1/1"                  // Mobile aspect ratio
+ *   ratioDesktop="16/9"                // Desktop aspect ratio
+ *   span="6"                           // Grid columns to span
+ *   thumbhash="data:image/png;base64,..." // Optional blur placeholder
+ * />
+ * ```
+ *
+ * ## Key Features
+ *
+ * - Responsive sizing: Automatically calculates image dimensions based on grid system
+ * - Aspect ratios: Uses different ratios for mobile/desktop with smooth transitions
+ * - Performance optimized: Supports lazy loading, fetchpriority, and decoding attributes
+ * - Low CLS: Maintains aspect ratio placeholders during image load
+ * - Enhanced UX: Optional thumbhash blurred placeholders while loading
+ * - Zoom support: Optional zoomable images
+ * - Production ready: Handles image processing in production via Netlify Image API
+ */
+
+import type { ImageProps } from '@app-types/components.types';
+import { screens } from '@config/screens';
+import { getAltFallback } from '@lib/helpers';
+
+// --------------------------------------
+// Component Props Interface
+// --------------------------------------
+interface Props extends ImageProps {
+	// Core image properties
+	src: string;
+	urlFocus: string;
+	urlFocusMobile: string;
+	name: string;
+	width: number;
+	height: number;
+	alt?: string;
+	id?: string;
+	class?: string;
+	loading?: 'lazy' | 'eager';
+	ratioMobile: string;
+	ratioDesktop: string;
+	span: string;
+	// Layout and positioning options
+	backgroundContainer?: 'container' | 'full';
+	gridMarginDesktop?: number;
+	gridMarginMobile?: number;
+	gridGapDesktop?: number;
+	gridGapMobile?: number;
+	// Enhancement features
+	thumbhash?: string;
+	dataZoomable?: boolean;
+	dataZoomSrc?: string;
+	aboveFold?: boolean;
+	isFirstSlide?: boolean;
+}
+// --------------------------------------
+// Environment Configuration
+// --------------------------------------
+const isProduction = import.meta.env.PROD;
+const isNetlifyDev = Boolean(import.meta.env.NETLIFY_DEV);
+
+// Should we use Netlify Image processing?
+const useNetlifyImageProcessing = isProduction || isNetlifyDev;
+
+// --------------------------------------
+// Layout Constants
+// --------------------------------------
+const maxContainerWidth = 1920;
+const mobileBreakpoint = 'lg';
+
+// --------------------------------------
+// Breakpoint Processing
+// --------------------------------------
+// Convert screens object to sorted array of objects with key and numeric value
+const breakpoints = Object.entries(screens)
+	.map(([key, value]) => ({
+		key,
+		value: parseInt(value.replace('px', '')),
+	}))
+	.sort((a, b) => a.value - b.value);
+
+// Find the index of the mobile breakpoint
+const mobileBreakpointIndex = breakpoints.findIndex(
+	(bp) => bp.key === mobileBreakpoint
+);
+
+// Get the actual pixel value of the mobile breakpoint
+const mobileBreakpointValue =
+	breakpoints.find((bp) => bp.key === mobileBreakpoint)?.value || 1024;
+
+// Create screen ranges with appropriate media queries
+const screenRanges = breakpoints.map((breakpoint, index) => {
+	const nextBreakpoint = breakpoints[index + 1];
+
+	if (index === 0) {
+		// First breakpoint (smallest screens)
+		return {
+			key: breakpoint.key,
+			mediaQuery: `(max-width: ${breakpoint.value}px)`,
+			maxWidth: breakpoint.value,
+		};
+	} else if (!nextBreakpoint) {
+		// Last breakpoint (largest screens)
+		return {
+			key: breakpoint.key,
+			mediaQuery: `(min-width: ${breakpoint.value + 1}px)`,
+			maxWidth: Math.min(breakpoint.value * 1.5, 2560), // Cap at 2560px
+		};
+	} else {
+		// Middle breakpoints - ensure no gaps between ranges
+		return {
+			key: breakpoint.key,
+			mediaQuery: `(min-width: ${breakpoint.value}px) and (max-width: ${nextBreakpoint.value}px)`,
+			maxWidth: nextBreakpoint.value,
+		};
+	}
+});
+
+// --------------------------------------
+// Props Destructuring and Validation
+// --------------------------------------
+const {
+	src,
+	urlFocus,
+	urlFocusMobile,
+	width,
+	height,
+	name,
+	ratioMobile,
+	ratioDesktop,
+	span,
+	// Optional props with defaults
+	alt,
+	id,
+	class: className,
+	loading = 'lazy',
+	// backgroundContainer = 'container', // Not currently used
+	gridMarginDesktop = 24,
+	gridMarginMobile = 16,
+	gridGapDesktop = 24,
+	gridGapMobile = 16,
+	// Optional features
+	thumbhash,
+	dataZoomable,
+	aboveFold,
+	isFirstSlide,
+} = Astro.props;
+
+// Input validation
+if (
+	!src ||
+	!width ||
+	!height ||
+	!name ||
+	!ratioMobile ||
+	!ratioDesktop ||
+	!span
+) {
+	throw new Error('Missing required props in Picture component');
+}
+
+// --------------------------------------
+// Utility Functions for Aspect Ratio
+// --------------------------------------
+function validateRatio(ratio: string) {
+	if (ratio !== 'original' && !ratio.match(/^\d+\/\d+$/)) {
+		throw new Error(
+			`Invalid ratio format: ${ratio}. Must be either 'original' or 'number/number'`
+		);
+	}
+}
+
+function getRatio(ratio: string, width: number, height: number): number {
+	if (!ratio) {
+		console.warn('Ratio is undefined, using default 1/1');
+		return 1; // default square ratio
+	}
+
+	const [numerator, denominator] =
+		ratio === 'original' ? [width, height] : ratio.split('/');
+	return Number(numerator) / Number(denominator);
+}
+
+// --------------------------------------
+// Image Dimension Calculations
+// --------------------------------------
+function getScreenConfig(screenWidth: number) {
+	const isMobile = screenWidth <= mobileBreakpointValue;
+	return {
+		columns: isMobile ? 6 : 12,
+		gridGap: isMobile ? gridGapMobile : gridGapDesktop,
+		margins: isMobile ? gridMarginMobileTotal : gridMarginDesktopTotal,
+	};
+}
+
+function calculateImageWidth(
+	containerWidth: number,
+	columns: number,
+	span: string,
+	gridGap: number
+): number {
+	const totalGapSpace = gridGap * (Number(span) - 1);
+	const availableSpace = containerWidth - totalGapSpace;
+	return Math.round((availableSpace * Number(span)) / columns + totalGapSpace);
+}
+
+function calculateResponsiveImageWidth(
+	screenWidth: number,
+	span: string
+): number {
+	const { columns, gridGap, margins } = getScreenConfig(screenWidth);
+
+	// Calculate the actual available width, capped at maxContainerWidth
+	const effectiveScreenWidth = Math.min(screenWidth, maxContainerWidth);
+	const availableScreenWidth = effectiveScreenWidth - margins;
+
+	const calculatedWidth = calculateImageWidth(
+		availableScreenWidth,
+		columns,
+		span,
+		gridGap
+	);
+
+	return Math.min(calculatedWidth, availableScreenWidth);
+}
+
+function calculateImageHeight(imageWidth: number, ratio: number): number {
+	return Math.round(imageWidth / ratio);
+}
+
+// --------------------------------------
+// Image URL Generation
+// --------------------------------------
+function createNetlifyImageUrl(
+	source: string,
+	width: number,
+	height: number,
+	format = 'avif'
+): string {
+	return `/.netlify/images?url=${encodeURIComponent(
+		source
+	)}&w=${width}&h=${height}&fit=cover&fm=${format}&q=70`;
+}
+
+function createProductionSrcSet(
+	source: string,
+	screenRange: (typeof screenRanges)[0],
+	isMobile: boolean
+): string {
+	const ratio = isMobile ? ratioMobileValue : ratioDesktopValue;
+	const screenWidth = screenRange.maxWidth;
+
+	return [1, 2]
+		.map((dpr) => {
+			const imgWidth = calculateResponsiveImageWidth(screenWidth, span) * dpr;
+			const imgHeight = calculateImageHeight(imgWidth, ratio);
+			return `${createNetlifyImageUrl(source, imgWidth, imgHeight)} ${dpr}x`;
+		})
+		.join(', ');
+}
+
+// --------------------------------------
+// Content Preparation
+// --------------------------------------
+// Validate ratios
+validateRatio(ratioMobile);
+validateRatio(ratioDesktop);
+
+// Process aspect ratios
+const ratioDesktopValue = getRatio(ratioDesktop, width, height);
+const ratioMobileValue = getRatio(ratioMobile, width, height);
+
+// Determine image sources based on ratios
+const sourceMobile = ratioMobile === 'original' ? src : urlFocusMobile;
+const sourceDesktop = ratioDesktop === 'original' ? src : urlFocus;
+
+// Calculate grid margins
+const gridMarginTotal = 2;
+const gridMarginDesktopTotal = gridMarginDesktop * gridMarginTotal;
+const gridMarginMobileTotal = gridMarginMobile * gridMarginTotal;
+
+// Determine fetch priority for performance
+const fetchPriority = aboveFold
+	? isFirstSlide || isFirstSlide === undefined
+		? 'high'
+		: 'low'
+	: undefined;
+
+// --------------------------------------
+// Fallback Image Generation
+// --------------------------------------
+// Find the smallest breakpoint for fallback image
+const smallestScreenRange = screenRanges[0];
+const ratio = ratioMobileValue; // Use mobile ratio for fallback
+const smallestScreenWidth = smallestScreenRange.maxWidth;
+
+// Calculate the smallest image size for fallback
+const fallbackWidth = calculateResponsiveImageWidth(smallestScreenWidth, span);
+const fallbackHeight = calculateImageHeight(fallbackWidth, ratio);
+const fallbackSource = sourceMobile; // Use mobile source for fallback
+
+// Generate fallback img src
+const fallbackSrc = useNetlifyImageProcessing
+	? createNetlifyImageUrl(fallbackSource, fallbackWidth, fallbackHeight)
+	: fallbackSource;
+---
+
+<div
+	class="picture-container"
+	style={`--ratio-mobile: ${ratioMobileValue}; --ratio-desktop: ${ratioDesktopValue};`}
+>
+	{
+		thumbhash && (
+			<div class="thumbhash" style={`background-image: url(${thumbhash});`} />
+		)
+	}
+	<picture>
+		{
+			screenRanges.map((range, index) => {
+				const isMobile = index < mobileBreakpointIndex;
+				const source = isMobile ? sourceMobile : sourceDesktop;
+
+				return (
+					<source
+						srcset={
+							useNetlifyImageProcessing
+								? createProductionSrcSet(source, range, isMobile)
+								: source
+						}
+						media={range.mediaQuery}
+					/>
+				);
+			})
+		}
+		<img
+			src={fallbackSrc}
+			width={fallbackWidth}
+			height={fallbackHeight}
+			alt={alt || getAltFallback(name)}
+			id={id}
+			loading={aboveFold ? undefined : loading}
+			data-zoomable={dataZoomable}
+			data-zoom-src={dataZoomable ? sourceDesktop : undefined}
+			class:list={[className, 'image-fade']}
+			decoding="async"
+			{...fetchPriority ? { fetchpriority: fetchPriority } : {}}
+			onload="this.classList.add('loaded'); if (this.parentNode && this.parentNode.parentNode) { this.parentNode.parentNode.classList.add('image-loaded'); }"
+		/>
+	</picture>
+</div>
+
+<style>
+	.picture-container {
+		@apply relative block w-full;
+	}
+
+	/* Apply aspect ratio based on screen size */
+	.picture-container::before {
+		@apply block w-full content-[''];
+	}
+
+	/* Mobile aspect ratio */
+	@media (max-width: 768px) {
+		.picture-container::before {
+			padding-top: calc(1 / var(--ratio-mobile) * 100%);
+		}
+	}
+
+	/* Desktop aspect ratio */
+	@media (min-width: 769px) {
+		.picture-container::before {
+			padding-top: calc(1 / var(--ratio-desktop) * 100%);
+		}
+	}
+
+	.thumbhash {
+		@apply absolute inset-0 z-0 bg-cover bg-center transition-opacity duration-300 ease-out;
+	}
+
+	.image-loaded .thumbhash {
+		@apply opacity-0;
+	}
+
+	picture {
+		@apply absolute left-0 top-0 block h-full w-full;
+	}
+
+	picture img {
+		@apply block h-full w-full object-cover opacity-0 transition-opacity duration-300 ease-in;
+	}
+
+	picture img.loaded {
+		@apply opacity-100;
+	}
+</style>

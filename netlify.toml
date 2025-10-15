@@ -1,0 +1,20 @@
+[build]
+command = "astro build"
+base = "/"
+publish = "dist"
+
+# Register the astro-kirby-sync as a Netlify Build Plugin
+[[plugins]]
+package = "./plugins/astro-kirby-sync"
+
+[build.processing.html]
+pretty_urls = true
+
+[build.environment]
+NODE_VERSION = "23"
+
+[images]
+remote_images = [ "https://cms.baukasten.matthiashacksteiner.net/media/.*" ]
+
+[dev]
+  autoLaunch = false

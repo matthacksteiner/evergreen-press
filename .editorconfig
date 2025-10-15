@@ -1,0 +1,59 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# JavaScript, TypeScript, Astro, and related files
+[*.{js,jsx,ts,tsx,astro,mjs,cjs}]
+indent_style = tab
+indent_size = 2
+max_line_length = 80
+
+# JSON, YAML, and config files
+[*.{json,yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Markdown files
+[*.{md,mdx}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+trim_trailing_whitespace = false
+
+# CSS and SCSS files
+[*.{css,scss,sass}]
+indent_style = tab
+indent_size = 2
+
+# HTML files
+[*.html]
+indent_style = tab
+indent_size = 2
+
+# Package files
+[package.json]
+indent_style = space
+indent_size = 2
+
+# Netlify configuration
+[netlify.toml]
+indent_style = space
+indent_size = 2
+
+# Environment files
+[.env*]
+indent_style = space
+indent_size = 2
+
+# Git files
+[.gitignore]
+indent_style = space
+indent_size = 2

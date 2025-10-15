@@ -1,0 +1,33 @@
+---
+import type { ScrollButtonComponentProps } from '@app-types/components.types';
+import type { BaseComponentProps } from '@app-types/components.types';
+
+interface Props extends BaseComponentProps {
+	controls?: boolean;
+	color?: string;
+	size?: 'Klein' | 'Mittel' | 'Groß';
+}
+
+const { controls, color, size } = Astro.props as ScrollButtonComponentProps;
+---
+
+{
+	controls ? (
+		<button
+			class:list={[
+				'arrow',
+				'absolute',
+				'bottom-[10vh]',
+				'left-1/2',
+				'z-10',
+				'-translate-x-2/4',
+				`text--${color}`,
+				size === 'Klein' && 'text-3xl',
+				size === 'Mittel' && 'text-5xl',
+				size === 'Groß' && 'text-8xl',
+			]}
+		>
+			&#8595;
+		</button>
+	) : null
+}

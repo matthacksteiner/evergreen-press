@@ -1,0 +1,275 @@
+---
+import { toRem } from '@lib/helpers';
+import Link from '@components/Link.astro';
+import type { BlockButtonComponentProps } from '@app-types/components.types';
+
+const {
+	link,
+	global,
+	align,
+	className,
+	buttonLocal,
+	buttonSettings,
+	buttonColors,
+	metadata,
+} = Astro.props as BlockButtonComponentProps;
+const buttonFont =
+	buttonLocal && buttonSettings ? buttonSettings.buttonfont : global.buttonFont;
+const size =
+	buttonLocal && buttonSettings
+		? buttonSettings.buttonfontsize
+		: global.buttonFontSize;
+const buttonPadding =
+	buttonLocal && buttonSettings
+		? toRem(buttonSettings.buttonpadding || 0)
+		: toRem(global.buttonPadding);
+const color =
+	buttonLocal && buttonColors
+		? buttonColors.buttontextcolor
+		: global.buttonTextColor;
+const colorActive =
+	buttonLocal && buttonColors
+		? buttonColors.buttontextcoloractive
+		: global.buttonTextColorActive;
+const buttonBorderColor =
+	buttonLocal && buttonColors
+		? buttonColors.buttonbordercolor
+		: global.buttonBorderColor;
+const bg =
+	buttonLocal && buttonColors
+		? buttonColors.buttonbackgroundcolor
+		: global.buttonBackgroundColor;
+const bgActive =
+	buttonLocal && buttonColors
+		? buttonColors.buttonbackgroundcoloractive
+		: global.buttonBackgroundColorActive;
+const buttonBorderColorActive =
+	buttonLocal && buttonColors
+		? buttonColors.buttonbordercoloractive
+		: global.buttonBorderColorActive;
+const buttonBorderWidth =
+	buttonLocal && buttonSettings
+		? toRem(buttonSettings.buttonborderwidth || 0)
+		: toRem(global.buttonBorderWidth);
+const buttonBorderRadius =
+	link && (link as any).title && (link as any).title.length === 1
+		? '50%'
+		: buttonLocal && buttonSettings
+		? toRem(buttonSettings.buttonborderradius || 0)
+		: toRem(global.buttonBorderRadius);
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={[
+		'blockButton',
+		'blocks',
+		'flex',
+		'flex-col',
+		className,
+		metadata?.classes,
+	]}
+	{...metadata?.attributes}
+>
+	{
+		link && link.type && (
+			<Link
+				link={link as any}
+				class:list={[
+					'button',
+					'inline-block',
+					`font--${size}`,
+					`buttonText--${color}`,
+					`buttonTextActive--${colorActive}`,
+					`buttonBg--${bg}`,
+					`buttonBgActive--${bgActive}`,
+					`buttonBorder--${buttonBorderColor}`,
+					`buttonBorderActive--${buttonBorderColorActive}`,
+					'transition-all',
+					'duration-300',
+					align === 'start' || align === 'normal'
+						? 'mr-auto'
+						: align === 'center'
+						? 'mx-auto'
+						: align === 'end' && 'ml-auto',
+				]}
+			/>
+		)
+	}
+</div>
+
+<style
+	lang="css"
+	is:global
+	define:vars={{
+		buttonFont,
+		buttonPadding,
+		buttonBorderRadius,
+		buttonBorderWidth,
+	}}
+>
+	.blockButton + .blockButton {
+		@apply !mt-0;
+	}
+	.button {
+		@apply rounded-[var(--buttonBorderRadius)] border-[length:var(--buttonBorderWidth)];
+		padding: var(--buttonPadding) calc(var(--buttonPadding) * 2);
+		font-family: var(--buttonFont);
+	}
+
+	.buttonText {
+		&--primary {
+			@apply text-primary;
+		}
+
+		&--secondary {
+			@apply text-secondary;
+		}
+
+		&--tertiary {
+			@apply text-tertiary;
+		}
+
+		&--black {
+			@apply text-black;
+		}
+
+		&--white {
+			@apply text-white;
+		}
+
+		&--transparent {
+			@apply text-transparent;
+		}
+	}
+
+	.buttonTextActive {
+		&--primary {
+			@apply hover:text-primary;
+		}
+
+		&--secondary {
+			@apply hover:text-secondary;
+		}
+
+		&--tertiary {
+			@apply hover:text-tertiary;
+		}
+
+		&--black {
+			@apply hover:text-black;
+		}
+
+		&--white {
+			@apply hover:text-white;
+		}
+
+		&--transparent {
+			@apply hover:text-transparent;
+		}
+	}
+
+	.buttonBg {
+		&--primary {
+			@apply bg-primary;
+		}
+
+		&--secondary {
+			@apply bg-secondary;
+		}
+
+		&--tertiary {
+			@apply bg-tertiary;
+		}
+
+		&--black {
+			@apply bg-black;
+		}
+
+		&--white {
+			@apply bg-white;
+		}
+
+		&--transparent {
+			@apply bg-transparent;
+		}
+	}
+
+	.buttonBgActive {
+		&--primary {
+			@apply hover:bg-primary;
+		}
+
+		&--secondary {
+			@apply hover:bg-secondary;
+		}
+
+		&--tertiary {
+			@apply hover:bg-tertiary;
+		}
+
+		&--black {
+			@apply hover:bg-black;
+		}
+
+		&--white {
+			@apply hover:bg-white;
+		}
+
+		&--transparent {
+			@apply hover:bg-transparent;
+		}
+	}
+
+	.buttonBorder {
+		&--primary {
+			@apply border-primary;
+		}
+
+		&--secondary {
+			@apply border-secondary;
+		}
+
+		&--tertiary {
+			@apply border-tertiary;
+		}
+
+		&--black {
+			@apply border-black;
+		}
+
+		&--white {
+			@apply border-white;
+		}
+
+		&--transparent {
+			@apply border-transparent;
+		}
+	}
+
+	.buttonBorderActive {
+		&--primary {
+			@apply hover:border-primary;
+		}
+
+		&--secondary {
+			@apply hover:border-secondary;
+		}
+
+		&--tertiary {
+			@apply hover:border-tertiary;
+		}
+
+		&--black {
+			@apply hover:border-black;
+		}
+
+		&--white {
+			@apply hover:border-white;
+		}
+
+		&--transparent {
+			@apply hover:border-transparent;
+		}
+	}
+</style>

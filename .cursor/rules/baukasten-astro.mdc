@@ -1,0 +1,188 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# Baukasten-Astro
+
+You are an expert in JavaScript, TypeScript, and Astro framework for scalable web development.
+
+## Key Principles
+
+- Write concise, technical responses with accurate Astro examples
+- Leverage Astro's static site generation (SSG) capabilities with optional SSR for previews
+- Provide a preview path (/preview/) for quick content previews without deployment
+- Implement multi-language support based on Kirby CMS configurations
+- Deploy to Netlify as configured in netlify.toml
+
+## Astro Project Structure
+
+The project follows this structure:
+
+```
+src/
+  blocks/        - Content block components (BlockText, BlockImage, BlockVideo, etc.)
+  components/    - Reusable UI components
+    __tests__/   - Component test files
+  config/        - Configuration files
+  icons/         - SVG icons (using astro-icon)
+  layouts/       - Page layout templates
+  lib/           - Utility functions and helpers
+  overrides/     - Custom overrides for project-specific implementations
+  pages/         - File-based routing system with dynamic routes
+    [lang]/      - Language-specific routes
+      [section]/ - Section-specific routes within language
+    [section]/   - Section-specific routes
+    preview/     - SSR-based preview pages
+  scripts/       - Client-side scripts for interactive components
+  styles/        - Global styles and Tailwind setup
+  types/         - TypeScript type definitions
+public/          - Static assets (images, fonts, etc.)
+  content/       - Synced content from Kirby CMS
+  favicons/      - Favicon files
+  fonts/         - Downloaded web fonts
+docs/            - All project documentation
+astro.config.mjs - Astro configuration with Netlify adapter
+tailwind.config.cjs - Tailwind CSS configuration
+.env            - Environment variables (KIRBY_URL, etc.)
+plugins/        - Custom plugins extending functionality:
+  - astro-kirby-sync/ - Syncs content from Kirby CMS
+  - font-downloader/ - Downloads and manages fonts
+  - lang-folder-rename/ - Handles language-specific folder renaming
+  - netlify-remote-images/ - Handles remote image optimization for Netlify
+  - baukasten-utils/ - Shared utilities across plugins
+snippets/        - Legacy snippet directory (blocks moved to src/blocks/)
+  blocks/        - Empty (blocks now in src/blocks/)
+```
+
+## Component Development
+
+- Create .astro files for components with appropriate props
+- Use the block-based content approach for structured content
+- Follow the established patterns in existing components
+- Keep components small, focused, and reusable
+- Use Tailwind CSS for styling without @apply
+- Include test files in components/**tests**/ for complex components
+
+## Blocks System
+
+The project uses a comprehensive block-based content approach:
+
+- src/blocks/ contains all content block components (BlockText, BlockImage, BlockVideo, etc.)
+- Each block corresponds to a content type in the Kirby CMS
+- Blocks receive structured data via props and render accordingly
+- Current blocks include: BlockText, BlockImage, BlockVideo, BlockCard, BlockSlider, BlockGallery, BlockAccordion, BlockButtonBar, BlockColumns, BlockIconList, BlockMenu, BlockQuoteSlider, BlockGrid, BlockCode, BlockVector, BlockLine, BlockDivider, BlockTitle, and BlockButton
+
+### Block Creation Requirements
+
+When creating a new block, you MUST follow these rules:
+
+1. **File Structure**: Create the block component as `src/blocks/Block[Name].astro` following the naming convention of existing blocks
+2. **Import Integration**: Add the import statement at the top of `src/components/Blocks.astro` alongside other block imports
+3. **Switch Case Integration**: Add a new case to the switch statement in `Blocks.astro` that matches the block type name and renders the new component with appropriate props
+4. **Props Structure**: Follow the same prop structure pattern as existing blocks, using `block.content.[property]` for accessing block data
+5. **Metadata Support**: Include `metadata={block.content.metadata}` prop for all blocks to support consistent metadata handling
+6. **TypeScript Support**: Define appropriate TypeScript interfaces in `src/types/blocks.types.ts` for the new block's props
+7. **Documentation**: Update the current blocks list in this documentation when adding new block types
+
+## Routing and Pages
+
+- Uses dynamic routing with [...slug].astro for content pages
+- Implements language-specific routes with [lang]/ directory
+- Section-specific routes with [section]/ directory within language folders
+- Special /preview/ path for SSR-based content previews
+- 404.astro for handling not found pages
+- Generates sitemap-index.xml and robots.txt programmatically
+
+## Content Management
+
+- Content is fetched from Kirby CMS via JSON endpoints
+- The KIRBY_URL environment variable points to the CMS
+- global.json provides site-wide configuration including languages
+- Content is fetched at build time for static generation
+- Preview mode uses SSR for real-time content updates
+- Custom astro-kirby-sync plugin manages content synchronization
+- Content is stored in public/content/ directory after sync
+
+## Styling
+
+- Uses Tailwind CSS for utility-based styling
+- Follows responsive design principles
+- Avoids @apply in favor of direct utility classes
+- Custom configurations in tailwind.config.cjs and src/overrides/tailwind.config.cjs
+- Screens configuration in src/config/screens.js
+- CSS nesting enabled via Tailwind configuration
+
+## Performance Optimization
+
+- Static generation for optimal performance
+- Minimal JavaScript with selective hydration when needed
+- Image optimization with Cloudinary integration (astro-cloudinary)
+- Netlify adapter for deployment with remote image handling
+- CSS and JavaScript compression via @playform/compress
+- Prefetch enabled for pre-rendered pages
+- Font optimization with custom font-downloader plugin
+
+## Integrations
+
+- @astrojs/netlify v6.3.4+ for Netlify deployment
+- @astrojs/tailwind v6.0.2+ for Tailwind CSS integration
+- astro-icon v1.1.0+ for SVG icons
+- astro-cloudinary v1.3.0+ for image optimization
+- Medium Zoom v1.1.0+ and PhotoSwipe v5.4.4+ for media galleries
+- Swiper v9.2.3+ for carousels and sliders
+- vanilla-cookieconsent v3.0.0+ for cookie management
+- @playform/compress v0.1.7+ for build optimization
+
+## Internationalization
+
+- Multi-language support configured via i18n in astro.config.mjs
+- Language data from Kirby CMS global.json
+- Optional prefixing for default locale via prefixDefaultLocale setting
+- Dynamic language routing with [lang]/ directory structure
+- Custom lang-folder-rename plugin for language path handling
+
+## Deployment
+
+- Netlify deployment as configured in netlify.toml
+- Always check the latest netlify documentation: https://docs.netlify.com
+- Environment variables for different configurations
+- Remote image configuration configurable in Netlify adapter settings
+- HTML processing with compression enabled
+- Astro version 5.8.2+ compatibility
+- Image CDN disabled in favor of custom remote image handling
+
+## Testing
+
+- Vitest v3.0.8+ for unit testing
+- Test command available via npm test
+- Additional test:sync command for plugin testing
+- Clean command for content directory (npm run clean)
+- Clean build and dev commands for fresh starts
+
+## Plugin System
+
+- Custom plugins extend Astro functionality
+- astro-kirby-sync - Manages content synchronization from Kirby CMS
+- font-downloader - Downloads and optimizes web fonts
+- lang-folder-rename - Handles language-specific folder structures
+- netlify-remote-images - Optimizes remote image handling for Netlify
+- baukasten-utils - Shared utilities and helpers across plugins
+- All plugins are workspace-specific and located in plugins/ directory
+
+## Best Practices
+
+- Follow established patterns in the existing codebase
+- Use TypeScript for type safety
+- Keep components small and focused
+- Optimize for Core Web Vitals
+- Implement proper SEO meta tags
+- Follow accessibility guidelines
+- Test across different devices and browsers
+- Check for the latest docs on https://docs.astro.build/en/getting-started/
+- Use aliases (@public) for simplified imports from public directory
+- Put all documentation into the docs folder - except the documentation for the build plugins. this documentation should remain in the plugin folder.
+- Use the established block system for content components
+- Leverage the multi-language routing system for international sites
+- Utilize the preview system for content validation before deployment

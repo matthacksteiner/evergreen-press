@@ -1,0 +1,51 @@
+---
+import type { ImageCaptionComponentProps } from '@app-types/components.types';
+import { toRem } from '@lib/helpers';
+
+const {
+	global,
+	captiontitle: captionTitle,
+	captiontextfont: captionTextFont,
+	captiontextsize: captionTextSize,
+	captiontextcolor: captionTextColor,
+	captiontextalign: captionTextAlign,
+	captionalign: captionAlign,
+} = Astro.props as ImageCaptionComponentProps;
+
+const gridBlockMobile = toRem(global.gridBlockMobile) || '1rem';
+const gridBlockDesktop = toRem(global.gridBlockDesktop) || '1rem';
+---
+
+{
+	captionAlign === 'center' ? (
+		<div class="text-content absolute left-2/4 top-2/4 z-20 w-4/5 max-w-[75%] -translate-x-2/4 -translate-y-2/4">
+			<figcaption
+				set:html={captionTitle}
+				style={`font-family: ${captionTextFont};`}
+				class:list={[
+					`caption font--${captionTextSize}`,
+					`text--${captionTextColor}`,
+					`text--${captionTextAlign}`,
+				]}
+			/>
+		</div>
+	) : (
+		<div class="text-content z-20">
+			<figcaption
+				set:html={captionTitle}
+				style={`font-family: ${captionTextFont};`}
+				class:list={[
+					`caption font--${captionTextSize}`,
+					`text--${captionTextColor}`,
+					`text--${captionTextAlign}`,
+				]}
+			/>
+		</div>
+	)
+}
+
+<style lang="css" define:vars={{ gridBlockMobile, gridBlockDesktop }}>
+	.text-content {
+		@apply mt-[var(--gridBlockMobile)] lg:mt-[var(--gridBlockDesktop)];
+	}
+</style>

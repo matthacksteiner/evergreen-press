@@ -1,0 +1,11 @@
+---
+import PageRenderer from '@components/PageRenderer.astro';
+import { getPage } from '@lib/api';
+
+export const prerender = false; // Use SSR to avoid build-time errors
+
+// Get maintenance page content
+const pageData = await getPage('maintenance');
+---
+
+<PageRenderer slug="maintenance" data={pageData} maintenanceMode={true} />

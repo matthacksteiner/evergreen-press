@@ -1,0 +1,37 @@
+---
+import type { BlockLineComponentProps } from '@app-types/components.types';
+
+const { borderStyle, borderWidth, borderColor, metadata } =
+	Astro.props as BlockLineComponentProps;
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blockLine', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	<hr
+		class:list={[`borderColor--${borderColor}`, `borderStyle--${borderStyle}`]}
+	/>
+</div>
+
+<style lang="css" define:vars={{ borderWidth }}>
+	hr {
+		@apply border-t-[length:var(--borderWidth)];
+	}
+
+	.borderStyle--solid {
+		@apply border-solid;
+	}
+	.borderStyle--dashed {
+		@apply border-dashed;
+	}
+
+	.borderStyle--dotted {
+		@apply border-dotted;
+	}
+
+	.borderStyle--double {
+		@apply border-double;
+	}
+</style>

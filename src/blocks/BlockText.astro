@@ -1,0 +1,125 @@
+---
+import type { BlockTextComponentProps } from '@app-types/components.types';
+
+const { text, font, size, align, color, headlines, metadata } =
+	Astro.props as BlockTextComponentProps;
+const h1Font = headlines.h1.font;
+const h2Font = headlines.h2.font;
+const h3Font = headlines.h3.font;
+const h4Font = headlines.h4.font;
+const h5Font = headlines.h5.font;
+const h6Font = headlines.h6.font;
+
+const {
+	h1: { size: h1Size },
+	h2: { size: h2Size },
+	h3: { size: h3Size },
+	h4: { size: h4Size },
+	h5: { size: h5Size },
+	h6: { size: h6Size },
+} = headlines;
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blockText', 'blocks', 'relative', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	<div
+		set:html={text}
+		class:list={[
+			'kirby-text',
+			`font--${size}`,
+			`text--${color}`,
+			`text--${align}`,
+			'w-fit',
+		]}
+		data-h1Size={h1Size}
+		data-h2Size={h2Size}
+		data-h3Size={h3Size}
+		data-h4Size={h4Size}
+		data-h5Size={h5Size}
+		data-h6Size={h6Size}
+	/>
+</div>
+
+<style
+	lang="css"
+	is:global
+	define:vars={{
+		font,
+		h1Font,
+		h2Font,
+		h3Font,
+		h4Font,
+		h5Font,
+		h6Font,
+	}}
+>
+	.kirby-text {
+		p,
+		ul,
+		ol,
+		li,
+		.arrow {
+			font-family: var(--font);
+		}
+
+		ul {
+			@apply list-outside pl-[1em];
+		}
+
+		h1 {
+			font-family: var(--h1Font);
+		}
+
+		h2 {
+			font-family: var(--h2Font);
+		}
+
+		h3 {
+			font-family: var(--h3Font);
+		}
+
+		h4 {
+			font-family: var(--h4Font);
+		}
+
+		h5 {
+			font-family: var(--h5Font);
+		}
+
+		h6 {
+			font-family: var(--h6Font);
+		}
+	}
+</style>
+
+<script>
+	const kirbyText = document.querySelectorAll(
+		'.kirby-text'
+	) as NodeListOf<HTMLElement>;
+
+	kirbyText.forEach((el) => {
+		const headings = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+		el.innerHTML = el.innerHTML.replace(/CO2/g, 'CO<sub>2</sub>');
+		headings.forEach((heading) => {
+			const size = el.dataset[`${heading}size`];
+			const headingEls = el.querySelectorAll(heading);
+			headingEls.forEach((headingEl) => {
+				if (headingEl) {
+					headingEl.classList.add(`font--${size}`);
+				}
+			});
+		});
+	});
+
+	document.querySelectorAll('ul, ol').forEach((list) => {
+		list.querySelectorAll('li').forEach((li) => {
+			const p = li.querySelector('p');
+			if (p !== null) {
+				li.innerHTML = p.innerHTML;
+			}
+		});
+	});
+</script>

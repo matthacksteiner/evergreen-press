@@ -1,0 +1,66 @@
+---
+export const prerender = false;
+
+import {
+	getData,
+	getLanguages,
+	type PageData,
+	type GlobalData,
+} from '@lib/api';
+import PageRenderer from '@components/PageRenderer.astro';
+
+// Set environment variable for preview mode detection
+process.env.ASTRO_PATH = Astro.url.pathname;
+
+// Variables to hold data or error state
+let data: PageData | undefined;
+let global: GlobalData | undefined;
+let hasError = false;
+let currentLangCode: string | undefined;
+
+try {
+	// Try to detect language from URL path
+	const path = Astro.url.pathname;
+	const pathParts = path.split('/').filter(Boolean);
+
+	// Get available languages from API
+	const languages = await getLanguages();
+	const langCodes = languages.allLang
+		.map((lang: any) => (typeof lang === 'string' ? lang : lang?.code || ''))
+		.filter(Boolean);
+
+	// Check if URL contains a language part (e.g., /preview/en/...)
+	if (pathParts.length > 1 && langCodes.includes(pathParts[1])) {
+		currentLangCode = pathParts[1];
+	} else {
+		currentLangCode = Astro.currentLocale;
+	}
+
+	// Get error page data
+	data = await getData<PageData>(`/error.json`);
+	global = currentLangCode
+		? await getData<GlobalData>(`/${currentLangCode}/global.json`)
+		: await getData<GlobalData>(`/global.json`);
+} catch (error) {
+	console.error('Error in preview 404 route:', error);
+	hasError = true;
+}
+---
+
+{
+	hasError ? (
+		<div class="p-8">
+			<h1 class="text-2xl font-bold text-red-600">Preview Error</h1>
+			<p class="mt-4">
+				Could not load error page. Please check the console for details.
+			</p>
+		</div>
+	) : (
+		<PageRenderer
+			slug="error"
+			lang={currentLangCode}
+			data={data}
+			global={global}
+		/>
+	)
+}

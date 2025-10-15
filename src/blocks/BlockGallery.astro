@@ -1,0 +1,113 @@
+---
+import ImageComponent from '@components/ImageComponent.astro';
+import type { BlockGalleryComponentProps } from '@app-types/components.types';
+
+const {
+	global,
+	images,
+	layoutType,
+	lightbox,
+	viewMobile,
+	viewDesktop,
+	viewPaddingMobile,
+	viewPaddingDesktop,
+	ratioMobile,
+	ratioDesktop,
+	span,
+	backgroundContainer,
+	metadata,
+	aboveFold,
+} = Astro.props as BlockGalleryComponentProps;
+// Convert padding values to numbers for CSS variables
+const paddingDesktopValue = viewPaddingDesktop
+	? parseInt(viewPaddingDesktop)
+	: 0;
+const paddingMobileValue = viewPaddingMobile ? parseInt(viewPaddingMobile) : 0;
+
+// Base classes for different layout types
+let layoutClass = 'grid-layout';
+if (layoutType === 'masonry') {
+	layoutClass = 'masonry-layout';
+}
+
+const itemSpan = (span || 12) / (Number(viewDesktop) || 1);
+
+// Determine loading strategy based on aboveFold
+const loadingStrategy = aboveFold ? 'eager' : 'lazy';
+---
+
+<section
+	id={metadata?.identifier || undefined}
+	class:list={['blockGallery', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+	data-layouttype={layoutType}
+	data-viewmobile={viewMobile}
+	data-viewdesktop={viewDesktop}
+	data-viewpaddingmobile={viewPaddingMobile}
+	data-viewpaddingdesktop={viewPaddingDesktop}
+>
+	<div class:list={[layoutClass]}>
+		{
+			images?.map((image) => (
+				<div class="gallery-item">
+					<div class="image-wrapper">
+						<ImageComponent
+							global={global}
+							image={image}
+							loading={loadingStrategy}
+							ratioMobile={ratioMobile}
+							ratioDesktop={ratioDesktop}
+							span={itemSpan}
+							{...(lightbox !== undefined ? { lightbox } : {})}
+							backgroundContainer={backgroundContainer}
+							aboveFold={aboveFold}
+						/>
+					</div>
+				</div>
+			))
+		}
+	</div>
+</section>
+
+<style
+	lang="css"
+	is:global
+	define:vars={{
+		viewMobile: viewMobile,
+		viewDesktop: viewDesktop,
+		paddingMobile: `${paddingMobileValue}px`,
+		paddingDesktop: `${paddingDesktopValue}px`,
+	}}
+>
+	/* Grid Layout */
+	.blockGallery .grid-layout {
+		@apply grid;
+		grid-template-columns: repeat(var(--viewMobile), 1fr);
+		gap: var(--paddingMobile);
+	}
+
+	@media (min-width: 768px) {
+		.blockGallery .grid-layout {
+			grid-template-columns: repeat(var(--viewDesktop), 1fr);
+			gap: var(--paddingDesktop);
+		}
+	}
+
+	/* Masonry Layout */
+	.blockGallery .masonry-layout {
+		column-count: var(--viewMobile);
+		column-gap: var(--paddingMobile);
+	}
+
+	@media (min-width: 768px) {
+		.blockGallery .masonry-layout {
+			column-count: var(--viewDesktop);
+			column-gap: var(--paddingDesktop);
+		}
+	}
+
+	/* Item Styles */
+	.blockGallery[data-layouttype='masonry'] .gallery-item {
+		@apply mb-4 break-inside-avoid;
+	}
+</style>

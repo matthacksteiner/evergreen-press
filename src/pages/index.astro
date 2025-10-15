@@ -1,0 +1,9 @@
+---
+import PageRenderer from '@components/PageRenderer.astro';
+import { getPage } from '@lib/api';
+
+// Use the API function to get properly typed data
+const pageData = await getPage('home');
+---
+
+<PageRenderer slug="home" data={pageData} />

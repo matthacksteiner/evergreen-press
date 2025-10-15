@@ -1,0 +1,87 @@
+---
+import type { PageRendererComponentProps } from '@app-types/components.types';
+import { getPage, getData } from '@lib/api';
+import { isPreviewMode } from '@lib/helpers';
+import type { PageRendererProps } from '@app-types/components.types';
+import type { PageData, GlobalData } from '@app-types/api.types';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import MaintenanceLayout from '@layouts/MaintenanceLayout.astro';
+import Layouts from '@components/Layouts.astro';
+import Section from '@components/Section.astro';
+
+type Props = PageRendererProps;
+
+const {
+	slug,
+	lang,
+	data: propsData,
+	global: propsGlobal,
+	page,
+	maintenanceMode = false,
+} = Astro.props as PageRendererComponentProps;
+
+// Use provided data or fetch it
+let data: PageData;
+let global: GlobalData;
+
+if (propsData && propsGlobal) {
+	data = propsData;
+	global = propsGlobal;
+} else {
+	// Add retry logic for API calls
+	const retryFetch = async (
+		fn: () => Promise<any>,
+		retries = 3,
+		delay = 1000
+	) => {
+		try {
+			return await fn();
+		} catch (error) {
+			if (retries > 0) {
+				await new Promise((resolve) => setTimeout(resolve, delay));
+				return retryFetch(fn, retries - 1, delay * 2);
+			}
+			throw error;
+		}
+	};
+
+	try {
+		[data, global] = await Promise.all([
+			retryFetch(() => getPage(slug, lang)),
+			retryFetch(() =>
+				lang
+					? getData<GlobalData>(`/${lang}/global.json`)
+					: getData<GlobalData>('/global.json')
+			),
+		]);
+	} catch (error) {
+		console.error(`Failed to fetch data for ${slug} (${lang}):`, error);
+		throw new Error(`Failed to load page data: ${error.message}`);
+	}
+}
+
+const pageTitle = data.title;
+
+// Check if this is a section page with pagination
+const isSectionPage = data.intendedTemplate === 'section' && page;
+
+// Choose layout based on maintenance mode
+const Layout = maintenanceMode ? MaintenanceLayout : BaseLayout;
+---
+
+<Layout pageTitle={pageTitle} data={data} global={global}>
+	{
+		isSectionPage ? (
+			<Section data={data} page={page} global={global} />
+		) : (
+			<Layouts layouts={data.layouts} data={data} global={global} />
+		)
+	}
+	{
+		!maintenanceMode && isPreviewMode() && (
+			<div class="fixed bottom-4 right-4 z-40 rounded-lg bg-red-600 px-3 py-1 font-medium text-white shadow-md">
+				Preview Mode
+			</div>
+		)
+	}
+</Layout>

@@ -1,0 +1,343 @@
+---
+import type { CookieConsentComponentProps } from '@app-types/components.types';
+import 'vanilla-cookieconsent/dist/cookieconsent.css';
+import { Icon } from 'astro-icon/components';
+
+const { googleAnalyticsToggle, googleAnalyticsCode, global, lang } =
+	Astro.props as CookieConsentComponentProps;
+const toggle = googleAnalyticsToggle ? 'true' : 'false';
+
+const analyticsLink = global?.analyticsLink?.uri || '/datenschutz';
+const analyticsLinkTitle = global?.analyticsLink?.title || 'Datenschutz';
+const currentLang = lang;
+const defaultLang = global.defaultLang.code;
+const prefixDefaultLocale = global.prefixDefaultLocale;
+---
+
+<button
+	id="cookieButton"
+	type="button"
+	data-cc="show-preferencesModal"
+	data-toggle={toggle}
+	data-code={googleAnalyticsCode}
+	data-analytics-link={analyticsLink}
+	data-analytics-link-title={analyticsLinkTitle}
+	data-lang={currentLang}
+	data-default-lang={defaultLang}
+	data-prefix-default={prefixDefaultLocale.toString()}
+	class="transition-all duration-300 ease-in-out"
+	aria-label="Cookie Preferences"
+>
+	<Icon name="cookie" class="transition-all duration-300 ease-in-out" />
+</button>
+
+<script>
+	declare global {
+		interface Window {
+			dataLayer: any[];
+		}
+	}
+	import { run } from 'vanilla-cookieconsent';
+	const toggle = (document.querySelector('#cookieButton') as HTMLButtonElement)
+		?.dataset.toggle;
+	const code = (document.querySelector('#cookieButton') as HTMLButtonElement)
+		?.dataset.code;
+	const analyticsLink = (
+		document.querySelector('#cookieButton') as HTMLButtonElement
+	)?.getAttribute('data-analytics-link');
+	const analyticsLinkTitle = (
+		document.querySelector('#cookieButton') as HTMLButtonElement
+	)?.getAttribute('data-analytics-link-title');
+	const currentLang = (
+		document.querySelector('#cookieButton') as HTMLButtonElement
+	)?.getAttribute('data-lang');
+	const prefixDefaultLocale =
+		(
+			document.querySelector('#cookieButton') as HTMLButtonElement
+		)?.getAttribute('data-prefix-default') === 'true';
+
+	if (toggle === 'true') {
+		run({
+			guiOptions: {
+				consentModal: {
+					layout: 'box inline',
+					position: 'bottom left',
+				},
+				preferencesModal: {
+					layout: 'box',
+					position: 'right',
+					equalWeightButtons: true,
+					flipButtons: false,
+				},
+			},
+			categories: {
+				necessary: {
+					readOnly: true,
+				},
+				functionality: {},
+				analytics: {
+					services: {
+						ga4: {
+							label:
+								'<a href="https://marketingplatform.google.com/about/analytics/terms/us/" target="_blank">Google Analytics 4</a>',
+							onAccept: () => {
+								const script = document.createElement('script');
+								script.src = `https://www.googletagmanager.com/gtag/js?id=${code}`;
+								script.async = true;
+								document.head.appendChild(script);
+
+								// Initialize Google Analytics
+								(window as any).dataLayer = (window as any).dataLayer || [];
+								function gtag(...args: any[]) {
+									(window as any).dataLayer.push(args);
+								}
+								gtag('js', new Date());
+								gtag('config', code);
+							},
+							onReject: () => {
+								window[`ga-disable-${code}`] = true;
+								const gaCookies = [/^_ga/];
+								gaCookies.forEach((pattern) => {
+									document.cookie.split(';').forEach((cookie) => {
+										const eqPos = cookie.indexOf('=');
+										const name =
+											eqPos > -1 ? cookie.substring(0, eqPos) : cookie;
+										if (pattern.test(name)) {
+											document.cookie = `${
+												name
+											}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${
+												location.hostname
+											}`;
+										}
+									});
+								});
+							},
+							cookies: [
+								{
+									name: /^_ga/,
+								},
+							],
+						},
+					},
+				},
+			},
+			language: {
+				default: 'de',
+				autoDetect: 'document',
+				translations: {
+					de: {
+						consentModal: {
+							title: 'Diese Seite verwendet Cookies!',
+							description:
+								'Diese Website verwendet Cookies, einschließlich Google Analytics, um die Nutzung zu analysieren und Ihre Erfahrung zu verbessern.',
+							acceptAllBtn: 'Alle Cookies akzeptieren',
+							acceptNecessaryBtn: 'Alle Cookies ablehnen',
+							showPreferencesBtn: 'Cookie Einstellungen anzeigen',
+							footer: `<a href="${
+								currentLang === 'de' && !prefixDefaultLocale ? '/' : '/de/'
+							}${analyticsLink}">${analyticsLinkTitle}</a>`,
+						},
+						preferencesModal: {
+							title: 'Cookie Einstellungen',
+							acceptAllBtn: 'Alle Cookies akzeptieren',
+							acceptNecessaryBtn: 'Alle Cookies ablehnen',
+							savePreferencesBtn: 'Einstellungen speichern',
+							closeIconLabel: 'Dialog schließen',
+							serviceCounterLabel: 'Service|Services',
+							sections: [
+								{
+									title: 'Cookie Verwendung',
+									description:
+										'Wir verwenden Cookies, um sicherzustellen, dass wir Ihnen die beste Erfahrung auf unserer Website bieten können. Durch die Nutzung unserer Website stimmen Sie der Verwendung von Cookies gemäß unserer Datenschutzrichtlinie zu. Diese Cookies umfassen auch solche von Google Analytics, um anonyme Informationen über die Nutzung unserer Website zu sammeln und zu analysieren. Sie können Ihre Cookie-Einstellungen jederzeit ändern.',
+								},
+								{
+									title:
+										'Technisch notwendige Cookies <span class="pm__badge">Immer aktiv</span>',
+									description:
+										'Diese Website verwendet technisch notwendige Cookies, um grundlegende Funktionen zu ermöglichen und die Sicherheit der Website zu gewährleisten.',
+									linkedCategory: 'necessary',
+								},
+								{
+									title: 'Analytics Cookies',
+									description:
+										'Diese Website verwendet Analytics-Cookies, um anonyme Informationen über die Nutzung der Website zu sammeln und die Benutzererfahrung zu verbessern.',
+									linkedCategory: 'analytics',
+								},
+							],
+						},
+					},
+					en: {
+						consentModal: {
+							title: 'This page uses Cookies!',
+							description:
+								'This website uses cookies, including Google Analytics, to analyze usage and improve your experience.',
+							acceptAllBtn: 'Accept all cookies',
+							acceptNecessaryBtn: 'Reject all cookies',
+							showPreferencesBtn: 'Show cookie settings',
+							footer: `<a href="/en/${analyticsLink}">${analyticsLinkTitle}</a>`,
+						},
+						preferencesModal: {
+							title: 'Cookie settings',
+							acceptAllBtn: 'Accept all cookies',
+							acceptNecessaryBtn: 'Reject all cookies',
+							savePreferencesBtn: 'Save settings',
+							closeIconLabel: 'Close dialogue',
+							serviceCounterLabel: 'Service|Services',
+							sections: [
+								{
+									title: 'Cookie Usage',
+									description:
+										'We use cookies to ensure that we can provide you with the best experience on our website. By using our website, you agree to the use of cookies in accordance with our privacy policy. These cookies also include those from Google Analytics to collect and analyze anonymous information about the use of our website. You can change your cookie settings at any time.',
+								},
+								{
+									title:
+										'Technically Necessary Cookies <span class="pm__badge">Always active</span>',
+									description:
+										'This website uses technically necessary cookies to enable basic functions and ensure the security of the website.',
+									linkedCategory: 'necessary',
+								},
+								{
+									title: 'Analytics Cookies',
+									description:
+										'This website uses analytics cookies to collect anonymous information about the usage of the website and to improve the user experience.',
+									linkedCategory: 'analytics',
+								},
+							],
+						},
+					},
+					it: {
+						consentModal: {
+							title: 'Questa pagina utilizza i Cookie!',
+							description:
+								"Questo sito web utilizza cookie, incluso Google Analytics, per analizzare l'utilizzo e migliorare la tua esperienza.",
+							acceptAllBtn: 'Accetta tutti i cookie',
+							acceptNecessaryBtn: 'Rifiuta tutti i cookie',
+							showPreferencesBtn: 'Mostra impostazioni cookie',
+							footer: `<a href="/it/${analyticsLink}">${analyticsLinkTitle}</a>`,
+						},
+						preferencesModal: {
+							title: 'Impostazioni cookie',
+							acceptAllBtn: 'Accetta tutti i cookie',
+							acceptNecessaryBtn: 'Rifiuta tutti i cookie',
+							savePreferencesBtn: 'Salva impostazioni',
+							closeIconLabel: 'Chiudi finestra di dialogo',
+							serviceCounterLabel: 'Servizio|Servizi',
+							sections: [
+								{
+									title: 'Utilizzo dei cookie',
+									description:
+										"Utilizziamo i cookie per garantirti la migliore esperienza sul nostro sito web. Utilizzando il nostro sito, accetti l'uso dei cookie in conformità con la nostra politica sulla privacy. Questi cookie includono anche quelli di Google Analytics per raccogliere e analizzare informazioni anonime sull'utilizzo del nostro sito web. Puoi modificare le tue impostazioni dei cookie in qualsiasi momento.",
+								},
+								{
+									title:
+										'Cookie tecnicamente necessari <span class="pm__badge">Sempre attivi</span>',
+									description:
+										'Questo sito web utilizza cookie tecnicamente necessari per abilitare le funzioni di base e garantire la sicurezza del sito web.',
+									linkedCategory: 'necessary',
+								},
+								{
+									title: 'Cookie analitici',
+									description:
+										"Questo sito web utilizza cookie analitici per raccogliere informazioni anonime sull'utilizzo del sito web e migliorare l'esperienza dell'utente.",
+									linkedCategory: 'analytics',
+								},
+							],
+						},
+					},
+					fr: {
+						consentModal: {
+							title: 'Cette page utilise des cookies !',
+							description:
+								"Ce site web utilise des cookies, y compris Google Analytics, pour analyser l'utilisation et améliorer votre expérience.",
+							acceptAllBtn: 'Accepter tous les cookies',
+							acceptNecessaryBtn: 'Refuser tous les cookies',
+							showPreferencesBtn: 'Afficher les paramètres des cookies',
+							footer: `<a href="/fr/${analyticsLink}">${analyticsLinkTitle}</a>`,
+						},
+						preferencesModal: {
+							title: 'Paramètres des cookies',
+							acceptAllBtn: 'Accepter tous les cookies',
+							acceptNecessaryBtn: 'Refuser tous les cookies',
+							savePreferencesBtn: 'Enregistrer les paramètres',
+							closeIconLabel: 'Fermer la boîte de dialogue',
+							serviceCounterLabel: 'Service|Services',
+							sections: [
+								{
+									title: 'Utilisation des cookies',
+									description:
+										"Nous utilisons des cookies pour vous garantir la meilleure expérience sur notre site web. En utilisant notre site, vous acceptez l'utilisation de cookies conformément à notre politique de confidentialité. Ces cookies incluent également ceux de Google Analytics pour collecter et analyser des informations anonymes sur l'utilisation de notre site web. Vous pouvez modifier vos paramètres de cookies à tout moment.",
+								},
+								{
+									title:
+										'Cookies techniquement nécessaires <span class="pm__badge">Toujours actifs</span>',
+									description:
+										'Ce site web utilise des cookies techniquement nécessaires pour permettre les fonctions de base et assurer la sécurité du site web.',
+									linkedCategory: 'necessary',
+								},
+								{
+									title: "Cookies d'analyse",
+									description:
+										"Ce site web utilise des cookies d'analyse pour collecter des informations anonymes sur l'utilisation du site web et améliorer l'expérience utilisateur.",
+									linkedCategory: 'analytics',
+								},
+							],
+						},
+					},
+					es: {
+						consentModal: {
+							title: '¡Esta página utiliza cookies!',
+							description:
+								'Este sitio web utiliza cookies, incluido Google Analytics, para analizar el uso y mejorar su experiencia.',
+							acceptAllBtn: 'Aceptar todas las cookies',
+							acceptNecessaryBtn: 'Rechazar todas las cookies',
+							showPreferencesBtn: 'Mostrar preferencias de cookies',
+							footer: `<a href="/es/${analyticsLink}">${analyticsLinkTitle}</a>`,
+						},
+						preferencesModal: {
+							title: 'Preferencias de cookies',
+							acceptAllBtn: 'Aceptar todas las cookies',
+							acceptNecessaryBtn: 'Rechazar todas las cookies',
+							savePreferencesBtn: 'Guardar preferencias',
+							closeIconLabel: 'Cerrar el diálogo',
+							serviceCounterLabel: 'Servicio|Servicios',
+							sections: [
+								{
+									title: 'Uso de cookies',
+									description:
+										'Utilizamos cookies para garantizarle la mejor experiencia en nuestro sitio web. Al utilizar nuestro sitio, acepta el uso de cookies de acuerdo con nuestra política de privacidad. Estas cookies también incluyen las de Google Analytics para recopilar y analizar información anónima sobre el uso de nuestro sitio web. Puede cambiar su configuración de cookies en cualquier momento.',
+								},
+								{
+									title:
+										'Cookies técnicamente necesarias <span class="pm__badge">Siempre activas</span>',
+									description:
+										'Este sitio web utiliza cookies técnicamente necesarias para permitir las funciones básicas y garantizar la seguridad del sitio web.',
+									linkedCategory: 'necessary',
+								},
+								{
+									title: 'Cookies analíticas',
+									description:
+										'Este sitio web utiliza cookies analíticas para recopilar información anónima sobre el uso del sitio web y mejorar la experiencia del usuario.',
+									linkedCategory: 'analytics',
+								},
+							],
+						},
+					},
+				},
+			},
+		});
+	}
+</script>
+
+<style>
+	#cookieButton {
+		@apply fixed bottom-5 left-5 z-50 grid h-12 w-12 place-items-center rounded-[50%] bg-black opacity-50;
+
+		&:hover {
+			@apply opacity-100;
+		}
+
+		& svg {
+			@apply h-8 w-8 text-white;
+		}
+	}
+</style>

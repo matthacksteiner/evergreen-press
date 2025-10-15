@@ -1,0 +1,400 @@
+---
+import { toRem } from '@lib/helpers';
+import BlockText from '@blocks/BlockText.astro';
+import BlockDivider from '@blocks/BlockDivider.astro';
+import BlockImage from '@blocks/BlockImage.astro';
+import BlockTitle from '@blocks/BlockTitle.astro';
+import BlockSlider from '@blocks/BlockSlider.astro';
+import BlockButton from '@blocks/BlockButton.astro';
+import BlockAccordion from '@blocks/BlockAccordion.astro';
+import BlockQuoteSlider from '@blocks/BlockQuoteSlider.astro';
+import BlockLine from '@blocks/BlockLine.astro';
+import BlockVector from '@blocks/BlockVector.astro';
+import BlockVideo from '@blocks/BlockVideo.astro';
+import BlockIconList from '@blocks/BlockIconList.astro';
+import BlockMenu from '@blocks/BlockMenu.astro';
+import BlockColumns from '@blocks/BlockColumns.astro';
+import BlockGrid from '@blocks/BlockGrid.astro';
+import BlockCode from '@blocks/BlockCode.astro';
+import BlockGallery from '@blocks/BlockGallery.astro';
+import BlockButtonBar from '@blocks/BlockButtonBar.astro';
+import BlockCard from '@blocks/BlockCard.astro';
+import BlockContactForm from '@blocks/BlockContactForm.astro';
+import BlockNavigation from '@blocks/BlockNavigation.astro';
+import BlockFeatured from '@blocks/BlockFeatured.astro';
+import type { ContentBlock } from '@app-types/api.types';
+
+interface Props {
+	blocks: ContentBlock[];
+	global: any;
+	span?: number;
+	backgroundContainer?: boolean;
+	data?: any;
+}
+
+const { blocks, global, span, backgroundContainer, data } = Astro.props;
+---
+
+{
+	blocks ? (
+		blocks.map((block) => {
+			switch (block.type) {
+				case 'grid':
+					return <BlockGrid grid={block} global={global} span={span} />;
+				case 'columns':
+					return (
+						<BlockColumns
+							columns={block.content.columns}
+							global={global}
+							span={span}
+						/>
+					);
+				case 'code':
+					return (
+						<BlockCode
+							code={block.content.code}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'video':
+					return (
+						<BlockVideo
+							source={block.content.source}
+							url={block.content.url}
+							file={block.content.file}
+							options={block.content.options}
+							ratioMobile={block.content.ratiomobile}
+							ratioDesktop={block.content.ratio}
+							width={block.content.width}
+							height={block.content.height}
+							thumbnail={block.content.thumbnail}
+							toggle={block.content.toggle}
+							Level={block.content.level}
+							text={block.content.caption}
+							font={block.content.textfont}
+							textcolor={block.content.textcolor}
+							size={block.content.textsize}
+							metadata={block.content.metadata}
+							aboveFold={block.content.abovefold}
+						/>
+					);
+				case 'vector':
+					return (
+						<BlockVector
+							image={block.content.image}
+							widthMobile={block.content.widthmobile}
+							widthDesktop={block.content.widthdesktop}
+							widthAlign={block.content.widthalign}
+							metadata={block.content.metadata}
+						/>
+					);
+
+				case 'line':
+					return (
+						<BlockLine
+							borderStyle={block.content.borderstyle}
+							borderWidth={block.content.borderwidth}
+							borderColor={block.content.bordercolor}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'quoteSlider':
+					return (
+						<BlockQuoteSlider
+							items={block.content.acc}
+							titleFont={block.content.titlefont}
+							titleColor={block.content.titlecolor}
+							titleSize={block.content.titlesize}
+							textFont={block.content.textfont}
+							textColor={block.content.textcolor}
+							textSize={block.content.textsize}
+							textAlign={block.content.textalign}
+							titleAlign={block.content.titlealign}
+							controls={block.content.controls}
+							color={block.content.color}
+							time={block.content.time}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'accordion':
+					return (
+						<BlockAccordion
+							items={block.content.acc}
+							Level={block.content.level}
+							titleFont={block.content.titlefont}
+							titleColor={block.content.titlecolor}
+							titleSize={block.content.titlesize}
+							textFont={block.content.textfont}
+							textColor={block.content.textcolor}
+							textSize={block.content.textsize}
+							textAlign={block.content.textalign}
+							headlines={global.headlines}
+							borderWidth={block.content.borderwidth}
+							borderColor={block.content.bordercolor}
+							metadata={block.content.metadata}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'iconlist':
+					return (
+						<BlockIconList
+							items={block.content.list}
+							font={block.content.textfont}
+							color={block.content.textcolor}
+							size={block.content.textsize}
+							align={block.content.textalign}
+							iconSize={block.content.iconsize}
+							iconGap={block.content.icongap}
+							iconListGap={block.content.iconlistgap}
+							iconDirection={block.content.icondirection}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'menu':
+					return (
+						<BlockMenu
+							items={block.content.nav}
+							font={block.content.textfont}
+							color={block.content.textcolor}
+							size={block.content.textsize}
+							gap={block.content.listgap}
+							global={global}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'button':
+					return (
+						<BlockButton
+							link={block.content.linkobject}
+							global={global}
+							align={block.content.buttonalign}
+							buttonLocal={block.content.buttonlocal}
+							buttonSettings={block.content.buttonsettings}
+							buttonColors={block.content.buttoncolors}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'buttonBar':
+					return (
+						<BlockButtonBar
+							buttons={block.content.buttons}
+							global={global}
+							adjust={block.content.buttonadjust}
+							buttonLocal={block.content.buttonlocal}
+							buttonSettings={block.content.buttonsettings}
+							buttonColors={block.content.buttoncolors}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'title':
+					return (
+						<BlockTitle
+							title={block.content.text}
+							Level={block.content.level}
+							font={block.content.titlefont}
+							color={block.content.titlecolor}
+							size={block.content.titlesize}
+							align={block.content.titlealign}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'text':
+					return (
+						<BlockText
+							text={block.content.text}
+							font={block.content.textfont}
+							color={block.content.textcolor}
+							size={block.content.textsize}
+							align={block.content.textalign}
+							headlines={global.headlines}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'image':
+					return (
+						<BlockImage
+							global={global}
+							image={block.content.image}
+							ratioMobile={block.content.ratiomobile}
+							ratioDesktop={block.content.ratio}
+							span={span}
+							backgroundContainer={backgroundContainer}
+							lightbox={block.content.lightbox}
+							metadata={block.content.metadata}
+							aboveFold={block.content.abovefold}
+						/>
+					);
+				case 'slider':
+					return (
+						<BlockSlider
+							images={block.content.images}
+							toggle={block.content.toggle}
+							Level={block.content.level}
+							text={block.content.caption}
+							font={block.content.textfont}
+							textcolor={block.content.textcolor}
+							size={block.content.textsize}
+							align={block.content.textalign}
+							ratioMobile={block.content.ratiomobile}
+							ratioDesktop={block.content.ratio}
+							controls={block.content.controls}
+							color={block.content.color}
+							time={block.content.time}
+							effect={block.content.effect}
+							direction={block.content.direction}
+							viewMobile={block.content.viewmobile}
+							viewDesktop={block.content.viewdesktop}
+							viewPaddingMobile={block.content.viewpaddingmobile}
+							viewPaddingDesktop={block.content.viewpaddingdesktop}
+							span={span}
+							global={global}
+							backgroundContainer={backgroundContainer}
+							metadata={block.content.metadata}
+							aboveFold={block.content.abovefold}
+						/>
+					);
+				case 'gallery':
+					return (
+						<BlockGallery
+							images={block.content.images}
+							layoutType={block.content.layouttype}
+							lightbox={block.content.lightbox}
+							viewMobile={block.content.viewmobile}
+							viewDesktop={block.content.viewdesktop}
+							viewPaddingMobile={block.content.viewpaddingmobile}
+							viewPaddingDesktop={block.content.viewpaddingdesktop}
+							ratioMobile={block.content.ratiomobile}
+							ratioDesktop={block.content.ratio}
+							span={span}
+							global={global}
+							backgroundContainer={backgroundContainer}
+							metadata={block.content.metadata}
+							aboveFold={block.content.abovefold}
+						/>
+					);
+				case 'divider':
+					return (
+						<BlockDivider
+							global={global}
+							spacingMobileTop={toRem(block.content.spacingmobiletop)}
+							spacingMobileBottom={toRem(block.content.spacingmobilebottom)}
+							spacingDesktopTop={toRem(block.content.spacingdesktoptop)}
+							spacingDesktopBottom={toRem(block.content.spacingdesktopbottom)}
+						/>
+					);
+				case 'card':
+					return (
+						<BlockCard
+							title={block.content.title}
+							text={block.content.text}
+							image={block.content.image}
+							hovertoggle={block.content.hovertoggle}
+							hovertext={block.content.hovertext}
+							linkToggle={block.content.linktoggle}
+							link={block.content.linkobject}
+							aspectRatio={block.content.aspectratio}
+							justify={block.content.justify}
+							level={block.content.level}
+							titleFont={block.content.titlefont}
+							titleSize={block.content.titlesize}
+							titleAlign={block.content.titlealign}
+							textFont={block.content.textfont}
+							textSize={block.content.textsize}
+							textAlign={block.content.textalign}
+							widthMobile={block.content.widthmobile}
+							widthDesktop={block.content.widthdesktop}
+							widthAlign={block.content.widthalign}
+							cardBackgroundColor={block.content.cardbackgroundcolor}
+							cardBackgroundColorActive={
+								block.content.cardbackgroundcoloractive
+							}
+							cardTextColor={block.content.cardtextcolor}
+							cardTextColorActive={block.content.cardtextcoloractive}
+							cardBorderColor={block.content.cardbordercolor}
+							cardBorderColorActive={block.content.cardbordercoloractive}
+							cardBorderWidth={block.content.cardborderwidth}
+							cardBorderRadius={block.content.cardborderradius}
+							cardBorderPaddingDesktop={block.content.cardborderpaddingdesktop}
+							cardBorderPaddingMobile={block.content.cardborderpaddingmobile}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'contactForm':
+					return (
+						<BlockContactForm
+							formName={block.content.formName}
+							emailSubject={block.content.emailSubject}
+							successPage={block.content.successPage}
+							spamProtection={block.content.spamProtection}
+							fields={block.content.fields}
+							fieldSpacing={block.content.fieldSpacing}
+							formWidth={block.content.formWidth}
+							formAlign={block.content.formAlign}
+							textGroup={block.content.textGroup}
+							formBorderRadius={block.content.formBorderRadius}
+							buttonLocal={block.content.buttonLocal}
+							buttonSettings={block.content.buttonSettings}
+							buttonColors={block.content.buttonColors}
+							buttonAlign={block.content.buttonAlign}
+							global={global}
+							metadata={block.content.metadata}
+						/>
+					);
+				case 'navigation':
+					return (
+						<BlockNavigation
+							previousToggle={block.content.previousToggle}
+							nextToggle={block.content.nextToggle}
+							previousLabel={block.content.previousLabel}
+							nextLabel={block.content.nextLabel}
+							navigationAlign={block.content.navigationAlign}
+							buttonLocal={block.content.buttonlocal}
+							buttonSettings={block.content.buttonsettings}
+							buttonColors={block.content.buttoncolors}
+							metadata={block.content.metadata}
+							global={global}
+							data={data}
+						/>
+					);
+				case 'featured':
+					return (
+						<BlockFeatured
+							items={block.content.items}
+							titleLevel={block.content.fonttitle?.level}
+							titleFont={block.content.fonttitle?.titlefont}
+							titleColor={block.content.fonttitle?.titlecolor}
+							titleSize={block.content.fonttitle?.titlesize}
+							titleAlign={block.content.fonttitle?.titlealign}
+							textFont={block.content.fonttext?.textfont}
+							textColor={block.content.fonttext?.textcolor}
+							textSize={block.content.fonttext?.textsize}
+							textAlign={block.content.fonttext?.textalign}
+							spanMobile={block.content.displaygrid?.spanmobile}
+							spanDesktop={block.content.displaygrid?.span}
+							gapMobile={block.content.grid?.gapMobile}
+							gapDesktop={block.content.grid?.gap}
+							gapHorizontalMobile={block.content.grid?.gapHorizontalMobile}
+							gapHorizontalDesktop={block.content.grid?.gapHorizontal}
+							ratioMobile={block.content.displayratio?.ratiomobile}
+							ratioDesktop={block.content.displayratio?.ratio}
+							fontTitleToggle={block.content.fontTitleToggle}
+							fontTextToggle={block.content.fontTextToggle}
+							captionAlign={block.content.captionAlign}
+							captionControls={block.content.captionControls}
+							captionOverlayRange={block.content.captionOverlayRange}
+							captionColor={block.content.captionColor}
+							global={global}
+							span={span}
+							metadata={block.content.metadata}
+						/>
+					);
+				default:
+					return null;
+			}
+		})
+	) : (
+		<section class="container">
+			<p>Kein Blöcke gefunden.</p>
+		</section>
+	)
+}

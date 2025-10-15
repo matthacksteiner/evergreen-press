@@ -1,0 +1,133 @@
+---
+import Link from '@components/Link.astro';
+import type { BlockIconListComponentProps } from '@app-types/components.types';
+import { prepareSvgSource } from '@lib/helpers';
+
+const {
+	items,
+	font,
+	color,
+	size,
+	align,
+	iconSize,
+	iconGap,
+	iconListGap,
+	iconDirection,
+	metadata,
+} = Astro.props as BlockIconListComponentProps;
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blockIconlist', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	<ul
+		class:list={[
+			'list',
+			'flex',
+			iconDirection === 'Horizontal' ? 'flex-row' : 'flex-col',
+		]}
+		style={`row-gap: ${iconGap}px`}
+	>
+		{
+			items.map((item) => {
+				// Check if there's a valid linkObject
+				// For page links: href is null but uri exists
+				// For URL links: href exists
+				// For other types: check type and appropriate field
+				const hasValidLink =
+					item.linkObject &&
+					(item.linkObject.href ||
+						item.linkObject.uri ||
+						(item.linkObject.type && item.linkObject.type !== 'custom'));
+
+				// If no valid linkObject, render as non-linked content
+				if (!hasValidLink) {
+					return (
+						<li>
+							<div class:list={['link', 'flex']}>
+								{item.icon && (
+									<div
+										set:html={prepareSvgSource(
+											item.icon.source,
+											item.icon.width,
+											item.icon.height
+										)}
+										class:list={['icon', `text--${color}`]}
+										style={`height: ${iconSize}px; width: ${iconSize}px;`}
+									/>
+								)}
+								<span
+									class:list={[
+										'text',
+										`font--${size}`,
+										`text--${color}`,
+										`text--${align}`,
+									]}
+								>
+									{item.text}
+								</span>
+							</div>
+						</li>
+					);
+				}
+
+				// Render with Link component
+				return (
+					<li>
+						<Link
+							link={item.linkObject as any}
+							class:list={['link', 'flex']}
+							aria-label="icon list item"
+						>
+							{item.icon && (
+								<div
+									set:html={prepareSvgSource(
+										item.icon.source,
+										item.icon.width,
+										item.icon.height
+									)}
+									class:list={['icon', `text--${color}`]}
+									style={`height: ${iconSize}px; width: ${iconSize}px;`}
+								/>
+							)}
+							<span
+								class:list={[
+									'text',
+									`font--${size}`,
+									`text--${color}`,
+									`text--${align}`,
+								]}
+							>
+								{item.text}
+							</span>
+						</Link>
+					</li>
+				);
+			})
+		}
+	</ul>
+</div>
+
+<style lang="css" define:vars={{ font, iconListGap }}>
+	.blockIconlist {
+		font-family: var(--font);
+	}
+	.link,
+	.icon,
+	.text {
+		@apply flex items-center;
+	}
+	.link {
+		column-gap: calc(var(--iconListGap) * 1px);
+	}
+
+	/* Ensure SVG icons maintain consistent size and aspect ratio */
+	.icon {
+		@apply flex-shrink-0;
+	}
+	.icon :global(svg) {
+		@apply block h-full w-full object-contain;
+	}
+</style>

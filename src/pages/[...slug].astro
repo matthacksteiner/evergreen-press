@@ -1,0 +1,25 @@
+---
+import PageRenderer from '@components/PageRenderer.astro';
+import { getPage, getAllPages } from '@lib/api';
+
+export async function getStaticPaths() {
+	// Extract all pages using the API function
+	const pages = await getAllPages();
+	return pages.map((page) => ({
+		params: {
+			slug: page.uri,
+		},
+		props: {
+			pageId: page.uri,
+		},
+	}));
+}
+
+const { slug } = Astro.params;
+const { pageId } = Astro.props;
+
+// Use the API function to get the page data
+const pageData = await getPage(pageId);
+---
+
+<PageRenderer slug={slug} data={pageData} />

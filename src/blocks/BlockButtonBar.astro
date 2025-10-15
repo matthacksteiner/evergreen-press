@@ -1,0 +1,48 @@
+---
+import BlockButton from '@blocks/BlockButton.astro';
+import type { BlockButtonBarComponentProps } from '@app-types/components.types';
+
+const {
+	buttons,
+	global,
+	adjust,
+	buttonLocal,
+	buttonSettings,
+	buttonColors,
+	metadata,
+} = Astro.props as BlockButtonBarComponentProps;
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={[
+		'blockButtonBar',
+		'blocks',
+		'flex',
+		'flex-wrap',
+		'gap-4',
+		{
+			'justify-around': adjust === 'space-around',
+			'justify-between': adjust === 'space-between',
+			'justify-evenly': adjust === 'space-evenly',
+			'justify-start': adjust === 'start',
+			'justify-center': adjust === 'center',
+			'justify-end': adjust === 'end',
+			'justify-normal': !adjust || adjust === 'normal',
+		},
+		metadata?.classes,
+	]}
+	{...metadata?.attributes}
+>
+	{
+		buttons.map((button) => (
+			<BlockButton
+				link={button.linkobject}
+				global={global}
+				buttonLocal={buttonLocal}
+				buttonSettings={buttonSettings}
+				buttonColors={buttonColors}
+			/>
+		))
+	}
+</div>

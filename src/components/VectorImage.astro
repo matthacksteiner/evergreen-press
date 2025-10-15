@@ -1,0 +1,197 @@
+---
+import type { VectorImageComponentProps } from '@app-types/components.types';
+import {
+	getAltFallback,
+	ensureTrailingSlash,
+	prepareSvgSource,
+} from '@lib/helpers';
+
+const { image, widthMobile, widthDesktop, noLink, widthAlign } =
+	Astro.props as VectorImageComponentProps;
+const classes = image?.classes;
+const link = image?.linkexternal;
+const imageProps = {
+	src: image?.url,
+	alt: image?.alt,
+	name: image?.name,
+	width: image?.width,
+	height: image?.height,
+	id: image?.identifier,
+	'class:list': [
+		`widthMobile--${widthMobile || '100'}`,
+		`widthDesktop--${widthDesktop || '100'}`,
+		widthAlign === 'start' || widthAlign === 'normal'
+			? 'mr-auto'
+			: widthAlign === 'center'
+				? 'mx-auto'
+				: widthAlign === 'end' && 'ml-auto',
+		classes,
+	].filter(Boolean),
+};
+// CSS classes for the SVG container
+const svgClasses = [
+	`widthMobile--${widthMobile || '100'}`,
+	`widthDesktop--${widthDesktop || '100'}`,
+	widthAlign === 'start' || widthAlign === 'normal'
+		? 'mr-auto'
+		: widthAlign === 'center'
+			? 'mx-auto'
+			: widthAlign === 'end' && 'ml-auto',
+	classes,
+]
+	.filter(Boolean)
+	.join(' ');
+---
+
+{
+	() => {
+		if (!image) return null;
+
+		// Function to render inline SVG
+		const renderSvg = () => {
+			if (image.source) {
+				return (
+					<div
+						class={svgClasses}
+						id={image.identifier}
+						set:html={prepareSvgSource(
+							image.source,
+							image?.width,
+							image?.height
+						)}
+						aria-label={image.alt || 'Decorative image'}
+						role="img"
+					/>
+				);
+			} else {
+				return <img {...imageProps} />;
+			}
+		};
+
+		// Function to render SVG inside a link
+		const renderLinkedSvg = () => {
+			if (!link) return renderSvg();
+
+			let href: string | undefined,
+				target: '_blank' | undefined,
+				rel: 'noopener' | undefined;
+
+			switch (link.type) {
+				case 'url':
+					href = link.href;
+					target = link.popup ? '_blank' : undefined;
+					rel = link.popup ? 'noopener' : undefined;
+					break;
+
+				case 'page':
+					// Extract URI and hash from page link
+					const baseUri = link.uri || '';
+					const pageUrl = baseUri.startsWith('/') ? baseUri : `/${baseUri}`;
+					const urlWithTrailingSlash = ensureTrailingSlash(pageUrl);
+					href = link.hash
+						? `${urlWithTrailingSlash}#${link.hash}`
+						: urlWithTrailingSlash;
+					break;
+
+				case 'file':
+					href = image.url;
+					target = link.popup ? '_blank' : undefined;
+					rel = link.popup ? 'noopener' : undefined;
+					break;
+
+				default:
+					return renderSvg();
+			}
+
+			return (
+				<a
+					href={href}
+					target={target}
+					rel={rel}
+					aria-label={image.alt || getAltFallback(image.name)}
+				>
+					{renderSvg()}
+				</a>
+			);
+		};
+
+		if (!image.linktoggle || noLink) {
+			return renderSvg();
+		} else {
+			return renderLinkedSvg();
+		}
+	}
+}
+
+<style lang="css">
+	.widthMobile {
+		&--auto {
+			@apply w-auto;
+		}
+		&--5 {
+			@apply w-[5%];
+		}
+		&--10 {
+			@apply w-[10%];
+		}
+		&--20 {
+			@apply w-1/5;
+		}
+		&--33 {
+			@apply w-1/3;
+		}
+		&--50 {
+			@apply w-1/2;
+		}
+		&--66 {
+			@apply w-2/3;
+		}
+		&--75 {
+			@apply w-3/4;
+		}
+		&--100 {
+			@apply w-full;
+		}
+	}
+
+	@media (min-width: 768px) {
+		.widthDesktop {
+			&--auto {
+				@apply w-auto;
+			}
+			&--5 {
+				@apply w-[5%];
+			}
+			&--10 {
+				@apply w-[10%];
+			}
+			&--20 {
+				@apply w-1/5;
+			}
+			&--33 {
+				@apply w-1/3;
+			}
+			&--50 {
+				@apply w-1/2;
+			}
+			&--66 {
+				@apply w-2/3;
+			}
+			&--75 {
+				@apply w-3/4;
+			}
+			&--100 {
+				@apply w-full;
+			}
+		}
+	}
+
+	/* Make sure SVGs take up 100% of their container */
+	div[role='img'] :global(svg) {
+		@apply block h-full w-full;
+	}
+
+	a {
+		@apply w-full;
+	}
+</style>

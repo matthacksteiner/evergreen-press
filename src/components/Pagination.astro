@@ -1,0 +1,363 @@
+---
+import type { PaginationComponentProps } from '@app-types/components.types';
+import { toRem, ensureTrailingSlash } from '@lib/helpers';
+
+const { global, length, currentPage, firstUrl, prevUrl, nextUrl } =
+	Astro.props as PaginationComponentProps;
+const paginationFont = global.paginationFont;
+const size = global.paginationFontSize;
+const paginationPadding = toRem(global.paginationPadding);
+const paginationMargin = toRem(global.paginationMargin);
+const paginationTop = toRem(global.paginationTop);
+const paginationBottom = toRem(global.paginationBottom);
+const bg = global.paginationBackgroundColor;
+const bgHover = global.paginationBackgroundColorHover;
+const bgActive = global.paginationBackgroundColorActive;
+const color = global.paginationTextColor;
+const colorHover = global.paginationTextColorHover;
+const colorActive = global.paginationTextColorActive;
+const paginationBorderColor = global.paginationBorderColor;
+const paginationBorderColorHover = global.paginationBorderColorHover;
+const paginationBorderColorActive = global.paginationBorderColorActive;
+const paginationBorderWidth = toRem(global.paginationBorderWidth);
+const paginationBorderRadius = toRem(global.paginationBorderRadius);
+const paginationList = Array.from({ length: Number(length) }, (_, i) => i + 1);
+---
+
+<nav aria-label="Section pages" class="pagination pagination-default">
+	{
+		prevUrl ? (
+			<a
+				href={prevUrl}
+				class:list={[
+					'pagination__link',
+					`font--${size}`,
+					`paginationText--${color}`,
+					`paginationBg--${bg}`,
+					`paginationBoder--${paginationBorderColor}`,
+					`paginationTextHover--${colorHover}`,
+					`paginationBgHover--${bgHover}`,
+					`paginationBorderHover--${paginationBorderColorHover}`,
+				]}
+			>
+				<span>&#8592;</span>
+			</a>
+		) : (
+			''
+		)
+	}
+
+	{
+		paginationList.map((num) => {
+			// Construct pagination URL with proper trailing slash
+			const baseUrl = firstUrl || '/';
+			const pageUrl =
+				num == 1
+					? ensureTrailingSlash(baseUrl)
+					: ensureTrailingSlash(`${baseUrl}/${num}`);
+
+			return (
+				<a
+					href={pageUrl}
+					class:list={[
+						'pagination__link',
+						`font--${size}`,
+						`paginationText--${color}`,
+						`paginationBg--${bg}`,
+						`paginationBoder--${paginationBorderColor}`,
+						`paginationTextHover--${colorHover}`,
+						`paginationBgHover--${bgHover}`,
+						`paginationBorderHover--${paginationBorderColorHover}`,
+						currentPage == num &&
+							`paginationTextActive--${colorActive} paginationBgActive--${bgActive} paginationBorderActive--${paginationBorderColorActive} active`,
+					]}
+				>
+					{num}
+				</a>
+			);
+		})
+	}
+
+	{
+		!nextUrl ? (
+			''
+		) : (
+			<a
+				href={nextUrl}
+				class:list={[
+					'pagination__link',
+					`font--${size}`,
+					`paginationText--${color}`,
+					`paginationBg--${bg}`,
+					`paginationBoder--${paginationBorderColor}`,
+					`paginationTextHover--${colorHover}`,
+					`paginationBgHover--${bgHover}`,
+					`paginationBorderHover--${paginationBorderColorHover}`,
+				]}
+			>
+				<span>&#8594;</span>
+			</a>
+		)
+	}
+</nav>
+
+<style
+	lang="css"
+	is:global
+	define:vars={{
+		paginationFont,
+		paginationPadding,
+		paginationMargin,
+		paginationTop,
+		paginationBottom,
+		paginationBorderRadius,
+		paginationBorderWidth,
+	}}
+>
+	.pagination {
+		@apply mb-[var(--paginationBottom)] mt-[var(--paginationTop)] flex gap-x-[var(--paginationMargin)];
+	}
+
+	.pagination__link {
+		@apply rounded-[var(--paginationBorderRadius)] border-[length:var(--paginationBorderWidth)] border-[color:var(--borderColor)];
+		padding: var(--paginationPadding) calc(var(--paginationPadding) * 2);
+		font-family: var(--paginationFont);
+	}
+
+	/* text */
+	.paginationText {
+		&--primary {
+			@apply text-primary;
+		}
+
+		&--secondary {
+			@apply text-secondary;
+		}
+
+		&--tertiary {
+			@apply text-tertiary;
+		}
+
+		&--black {
+			@apply text-black;
+		}
+
+		&--white {
+			@apply text-white;
+		}
+
+		&--transparent {
+			@apply text-transparent;
+		}
+	}
+
+	.paginationTextHover {
+		&--primary {
+			@apply hover:text-primary;
+		}
+
+		&--secondary {
+			@apply hover:text-secondary;
+		}
+
+		&--tertiary {
+			@apply hover:text-tertiary;
+		}
+
+		&--black {
+			@apply hover:text-black;
+		}
+
+		&--white {
+			@apply hover:text-white;
+		}
+
+		&--transparent {
+			@apply hover:text-transparent;
+		}
+	}
+
+	.paginationTextActive {
+		&--primary {
+			@apply text-primary;
+		}
+
+		&--secondary {
+			@apply text-secondary;
+		}
+
+		&--tertiary {
+			@apply text-tertiary;
+		}
+
+		&--black {
+			@apply text-black;
+		}
+
+		&--white {
+			@apply text-white;
+		}
+
+		&--transparent {
+			@apply text-transparent;
+		}
+	}
+
+	/* bg */
+	.paginationBg {
+		&--primary {
+			@apply bg-primary;
+		}
+
+		&--secondary {
+			@apply bg-secondary;
+		}
+
+		&--tertiary {
+			@apply bg-tertiary;
+		}
+
+		&--black {
+			@apply bg-black;
+		}
+
+		&--white {
+			@apply bg-white;
+		}
+
+		&--transparent {
+			@apply bg-transparent;
+		}
+	}
+
+	.paginationBgHover {
+		&--primary {
+			@apply hover:bg-primary;
+		}
+
+		&--secondary {
+			@apply hover:bg-secondary;
+		}
+
+		&--tertiary {
+			@apply hover:bg-tertiary;
+		}
+
+		&--black {
+			@apply hover:bg-black;
+		}
+
+		&--white {
+			@apply hover:bg-white;
+		}
+
+		&--transparent {
+			@apply hover:bg-transparent;
+		}
+	}
+
+	.paginationBgActive {
+		&--primary {
+			@apply bg-primary;
+		}
+
+		&--secondary {
+			@apply bg-secondary;
+		}
+
+		&--tertiary {
+			@apply bg-tertiary;
+		}
+
+		&--black {
+			@apply bg-black;
+		}
+
+		&--white {
+			@apply bg-white;
+		}
+
+		&--transparent {
+			@apply bg-transparent;
+		}
+	}
+
+	/* border */
+	.paginationBoder {
+		&--primary {
+			@apply border-primary;
+		}
+
+		&--secondary {
+			@apply border-secondary;
+		}
+
+		&--tertiary {
+			@apply border-tertiary;
+		}
+
+		&--black {
+			@apply border-black;
+		}
+
+		&--white {
+			@apply border-white;
+		}
+
+		&--transparent {
+			@apply border-transparent;
+		}
+	}
+
+	.paginationBorderHover {
+		&--primary {
+			@apply hover:border-primary;
+		}
+
+		&--secondary {
+			@apply hover:border-secondary;
+		}
+
+		&--tertiary {
+			@apply hover:border-tertiary;
+		}
+
+		&--black {
+			@apply hover:border-black;
+		}
+
+		&--white {
+			@apply hover:border-white;
+		}
+
+		&--transparent {
+			@apply hover:border-transparent;
+		}
+	}
+
+	.paginationBorderActive {
+		&--primary {
+			@apply border-primary;
+		}
+
+		&--secondary {
+			@apply border-secondary;
+		}
+
+		&--tertiary {
+			@apply border-tertiary;
+		}
+
+		&--black {
+			@apply border-black;
+		}
+
+		&--white {
+			@apply border-white;
+		}
+
+		&--transparent {
+			@apply border-transparent;
+		}
+	}
+</style>

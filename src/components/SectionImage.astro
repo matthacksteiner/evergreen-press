@@ -1,0 +1,222 @@
+---
+import { toRem, ensureTrailingSlash, isPreviewMode } from '@lib/helpers';
+import { getPreviewPath } from '@lib/preview';
+import ImageComponent from '@components/ImageComponent.astro';
+import type { SectionImageProps } from '@app-types/components.types';
+
+type Props = SectionImageProps;
+
+const {
+	item,
+	global,
+	ratioMobile,
+	ratioDesktop,
+	span,
+	spanDesktop,
+	titleLevel = 'h2',
+	titleFont,
+	titleColor,
+	titleSize,
+	titleAlign,
+	textFont,
+	textColor,
+	textSize,
+	textAlign,
+	fontTitleToggle = true,
+	fontTextToggle = true,
+	captionAlign = 'bottom',
+	captionControls = [],
+	captionOverlayRange = 50,
+	captionColor = '#000000',
+	titleClass = 'title',
+	textClass = 'text',
+	textContentClass = 'text-content',
+	lang,
+	backgroundContainer = 'container',
+} = Astro.props as SectionImageProps;
+
+const TitleLevel = titleLevel;
+const gridBlockMobile = toRem(global.gridBlockMobile) || '1rem';
+const gridBlockDesktop = toRem(global.gridBlockDesktop) || '1rem';
+
+// Check if we should show overlay
+const showOverlay = captionControls && captionControls.includes('overlay');
+
+// Convert range (0-100) to opacity (0-1)
+const overlayOpacity = (captionOverlayRange || 50) / 100;
+
+// Use the caption color (default black)
+const overlayColor = captionColor || '#000000';
+---
+
+{
+	item.coverOnly ? (
+		<div class:list={['relative', showOverlay && 'overlay']}>
+			<ImageComponent
+				global={global}
+				image={item.thumbnail}
+				loading="lazy"
+				ratioMobile={ratioMobile}
+				ratioDesktop={ratioDesktop}
+				backgroundContainer={backgroundContainer}
+				span={spanDesktop || span}
+			/>
+
+			{(fontTitleToggle || fontTextToggle) && captionAlign === 'center' && (
+				<div class="absolute left-2/4 top-2/4 z-10 w-4/5 max-w-[75%] -translate-x-2/4 -translate-y-2/4">
+					{fontTitleToggle && (
+						<TitleLevel
+							class:list={[
+								titleClass,
+								`text--${titleColor}`,
+								`font--${titleSize}`,
+								`text--${titleAlign}`,
+							]}
+							set:html={item.title}
+						/>
+					)}
+
+					{fontTextToggle && (
+						<p
+							class:list={[
+								textClass,
+								`text--${textColor}`,
+								`font--${textSize}`,
+								`text--${textAlign}`,
+							]}
+							set:html={item.description}
+						/>
+					)}
+				</div>
+			)}
+		</div>
+	) : (
+		<a
+			href={
+				isPreviewMode()
+					? ensureTrailingSlash(getPreviewPath(item.uri, lang))
+					: ensureTrailingSlash(lang ? `/${lang}/${item.uri}` : '/' + item.uri)
+			}
+		>
+			<div class:list={['relative', showOverlay && 'overlay']}>
+				<ImageComponent
+					global={global}
+					image={item.thumbnail}
+					loading="lazy"
+					ratioMobile={ratioMobile}
+					ratioDesktop={ratioDesktop}
+					backgroundContainer={backgroundContainer}
+					span={spanDesktop || span}
+				/>
+
+				{(fontTitleToggle || fontTextToggle) && captionAlign === 'center' && (
+					<div class="absolute left-2/4 top-2/4 z-10 w-4/5 max-w-[75%] -translate-x-2/4 -translate-y-2/4">
+						{fontTitleToggle && (
+							<TitleLevel
+								class:list={[
+									titleClass,
+									`text--${titleColor}`,
+									`font--${titleSize}`,
+									`text--${titleAlign}`,
+								]}
+								set:html={item.title}
+							/>
+						)}
+
+						{fontTextToggle && (
+							<p
+								class:list={[
+									textClass,
+									`text--${textColor}`,
+									`font--${textSize}`,
+									`text--${textAlign}`,
+								]}
+								set:html={item.description}
+							/>
+						)}
+					</div>
+				)}
+			</div>
+		</a>
+	)
+}
+
+{
+	(fontTitleToggle || fontTextToggle) && captionAlign !== 'center' && (
+		<div class:list={[textContentClass, 'z-10']}>
+			{fontTitleToggle && (
+				<TitleLevel
+					class:list={[
+						titleClass,
+						`text--${titleColor}`,
+						`font--${titleSize}`,
+						`text--${titleAlign}`,
+					]}
+					set:html={item.title}
+				/>
+			)}
+
+			{fontTextToggle && (
+				<p
+					class:list={[
+						textClass,
+						`text--${textColor}`,
+						`font--${textSize}`,
+						`text--${textAlign}`,
+					]}
+					set:html={item.description}
+				/>
+			)}
+		</div>
+	)
+}
+
+<style
+	lang="css"
+	define:vars={{
+		gridBlockMobile,
+		gridBlockDesktop,
+		titleFont,
+		textFont,
+		overlayOpacity,
+		overlayColor,
+	}}
+>
+	.title,
+	.featured-title {
+		font-family: var(--titleFont);
+	}
+
+	.text,
+	.featured-text {
+		font-family: var(--textFont);
+	}
+
+	.text-content,
+	.featured-text-content,
+	.section-text-content {
+		@apply mt-[var(--gridBlockMobile)] lg:mt-[var(--gridBlockDesktop)];
+	}
+
+	.overlay:before {
+		@apply absolute left-0 top-0 z-10 h-full w-full transition-opacity duration-300 content-[''];
+		background-color: color-mix(
+			in srgb,
+			var(--overlayColor) calc(var(--overlayOpacity) * 100%),
+			transparent
+		);
+	}
+
+	/* Hover effects based on overlay state */
+	.overlay:hover:before {
+		@apply opacity-0;
+	}
+
+	.relative:not(.overlay):hover {
+		@apply opacity-80 transition-opacity duration-300;
+	}
+
+	a {
+		@apply block;
+	}
+</style>

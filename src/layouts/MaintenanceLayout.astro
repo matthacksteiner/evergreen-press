@@ -1,0 +1,188 @@
+---
+import { getFonts, getSizes } from '@lib/fonts';
+import { toRem } from '@lib/helpers';
+import '@styles/global.css';
+import '@styles/custom.css';
+import Header from '@components/Header.astro';
+import KirbyMeta from '@components/KirbyMeta.astro';
+
+const { data, global, pageTitle } = Astro.props;
+const fontsData = await getFonts();
+const fonts = fontsData.css;
+const fontsList = fontsData.fonts;
+const sizes = await getSizes();
+const lang = data.lang;
+
+// Force headerActive to false for maintenance mode
+const maintenanceGlobal = { ...global, headerActive: false };
+
+const pageId = data.uid;
+const colorPrimary = maintenanceGlobal.colorPrimary;
+const colorSecondary = maintenanceGlobal.colorSecondary;
+const colorTertiary = maintenanceGlobal.colorTertiary;
+const colorBlack = maintenanceGlobal.colorBlack;
+const colorWhite = maintenanceGlobal.colorWhite;
+const colorTransparent = maintenanceGlobal.colorTransparent;
+const colorBackground = maintenanceGlobal.colorBackground;
+
+const gridGapMobile = toRem(maintenanceGlobal.gridGapMobile) || '1.25rem';
+const gridMarginMobile = toRem(maintenanceGlobal.gridMarginMobile) || '1.25rem';
+const gridGapDesktop = toRem(maintenanceGlobal.gridGapDesktop) || '2.5rem';
+const gridMarginDesktop =
+	toRem(maintenanceGlobal.gridMarginDesktop) || '2.5rem';
+const gridBlockMobile = toRem(maintenanceGlobal.gridBlockMobile) || '1rem';
+const gridBlockDesktop = toRem(maintenanceGlobal.gridBlockDesktop) || '1rem';
+
+const url = Astro.url.origin;
+const description = data.meta.description;
+const favSvg = maintenanceGlobal.favicon?.svgSrc;
+const favIco = maintenanceGlobal.favicon?.icoSrc;
+const pngAppleSrc = maintenanceGlobal.favicon?.pngAppleSrc;
+const png192Src = maintenanceGlobal.favicon?.png192Src;
+const png512Src = maintenanceGlobal.favicon?.png512Src;
+---
+
+<!DOCTYPE html>
+<html
+	lang={lang}
+	class:list={[`bg--${colorBackground}`, 'full', 'motion-safe:scroll-smooth']}
+>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<KirbyMeta data={data} global={maintenanceGlobal} pageTitle={pageTitle} />
+
+		<!-- Add font CSS first so it's immediately available -->
+		<style set:html={fonts}></style>
+		<style set:html={sizes}></style>
+
+		{
+			/* Preload fonts for maintenance page */
+			fontsList.map((font) => {
+				if (!font.woff2) return null;
+				const fileName = font.woff2.split('/').pop();
+				return (
+					<link
+						rel="preload"
+						href={`/fonts/${fileName}`}
+						as="font"
+						type="font/woff2"
+						crossorigin="anonymous"
+					/>
+				);
+			})
+		}
+
+		<link
+			rel="icon"
+			type="image/svg+xml"
+			href={`${favSvg || '/favicons/favicon.svg'}`}
+		/>
+		<link
+			rel="icon"
+			type="image/x-icon"
+			href={`${favIco || '/favicons/favicon.ico'}`}
+		/>
+		<link
+			rel="apple-touch-icon"
+			href={`${pngAppleSrc || '/favicons/apple-touch-icon.png'}`}
+		/>
+		<link rel="manifest" id="manifestPlaceholder" />
+		<meta name="theme-color" content={`${colorPrimary}`} />
+	</head>
+	<body
+		id={pageId}
+		class="mx-auto items-center overflow-x-hidden"
+		data-png192src={png192Src}
+		data-png512src={png512Src}
+		data-url={url}
+		data-color={colorPrimary}
+		data-description={description}
+	>
+		<Header data={data} global={maintenanceGlobal} lang={lang} />
+
+		<main class="flex min-h-[100vh] w-full flex-col">
+			<slot />
+		</main>
+
+		<!-- No Footer in maintenance mode -->
+
+		<style
+			is:global
+			lang="css"
+			define:vars={{
+				colorPrimary,
+				colorSecondary,
+				colorTertiary,
+				colorBlack,
+				colorWhite,
+				colorTransparent,
+				gridGapMobile,
+				gridMarginMobile,
+				gridGapDesktop,
+				gridMarginDesktop,
+				gridBlockMobile,
+				gridBlockDesktop,
+			}}
+		>
+			:root {
+				--color-primary: var(--colorPrimary);
+				--color-secondary: var(--colorSecondary);
+				--color-tertiary: var(--colorTertiary);
+				--color-black: var(--colorBlack);
+				--color-white: var(--colorWhite);
+				--color-transparent: var(--colorTransparent);
+				--grid-margin-mobile: var(--gridMarginMobile);
+				--grid-margin-desktop: var(--gridMarginDesktop);
+				--scrollbar-width: 17px;
+				--scrollbar-threshold: calc(1920px + var(--scrollbar-width));
+			}
+
+			.grid-default {
+				@apply grid grid-cols-6 gap-x-[var(--gridGapMobile)] max-lg:gap-y-[var(--gridGapMobile)] lg:grid-cols-12 lg:gap-x-[var(--gridGapDesktop)];
+			}
+
+			.blocks ~ .blocks:not(.blockDivider) {
+				@apply mt-[var(--gridBlockMobile)] lg:mt-[var(--gridBlockDesktop)];
+			}
+		</style>
+		<script>
+			const png192Src = document.querySelector('body')?.dataset.png192src;
+			const png512Src = document.querySelector('body')?.dataset.png512src;
+			const url = document.querySelector('body')?.dataset.url;
+			const color = document.querySelector('body')?.dataset.color;
+			const title = document.querySelector('title')?.innerText;
+			const description = document.querySelector('body')?.dataset.description;
+			const myDynamicManifest = {
+	name: title,
+	short_name: title,
+	description,
+	start_url: url,
+	background_color: '#ffffff',
+	theme_color: color,
+	display: 'standalone',
+	icons: [
+		{
+			src: png192Src || `${url  }/favicons/android-chrome-192x192.png`,
+			sizes: '192x192',
+			type: 'image/png',
+		},
+		{
+			src: png512Src || `${url  }/favicons/android-chrome-512x512.png`,
+			sizes: '512x512',
+			type: 'image/png',
+		},
+	],
+};
+			const stringManifest = JSON.stringify(myDynamicManifest);
+			const blob = new Blob([stringManifest], { type: 'application/json' });
+			const manifestURL = URL.createObjectURL(blob);
+			const doc = document.querySelector('#manifestPlaceholder');
+			doc?.setAttribute('href', manifestURL);
+		</script>
+
+		<!-- No analytics or cookie consent for maintenance mode -->
+		<script src="@scripts/main.js"></script>
+	</body>
+</html>

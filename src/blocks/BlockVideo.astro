@@ -1,0 +1,239 @@
+---
+import { CldVideoPlayer } from 'astro-cloudinary';
+import type { BlockVideoComponentProps } from '@app-types/components.types';
+import Level from '@components/Level.astro';
+
+const CLOUDINARY_CLOUD_NAME = import.meta.env.PUBLIC_CLOUDINARY_CLOUD_NAME;
+const {
+	source,
+	url,
+	file,
+	options,
+	thumbnail,
+	ratioDesktop = '16/9',
+	ratioMobile = '16/9',
+	width,
+	height,
+	text,
+	font,
+	size,
+	align,
+	textcolor,
+	Level: headingLevel,
+	toggle,
+	metadata,
+	aboveFold,
+} = Astro.props as BlockVideoComponentProps;
+const hasOption = (option: string) => options.includes(option);
+
+const autoplay = hasOption('autoplay');
+const loop = hasOption('loop');
+const muted = hasOption('muted');
+const full = hasOption('full') ? 'h-screen object-cover' : null;
+const controls = hasOption('controls');
+const isYoutube = url?.includes('youtube.com') || url?.includes('youtu.be');
+const isVimeo = url?.includes('vimeo.com');
+const isCloudinary = url?.includes('cloudinary.com');
+const cloudinaryID =
+	isCloudinary && url ? url.split('/').pop()?.split('.')[0] : null;
+const thumb = thumbnail ? thumbnail.url : null;
+const cursor = thumbnail ? 'cursor-pointer' : null;
+const youtubeNoCookies =
+	isYoutube && url
+		? url
+				.replace(
+					'https://www.youtube.com/watch?v=',
+					'https://www.youtube-nocookie.com/embed/'
+				)
+				.replace('https://youtu.be/', 'https://www.youtube-nocookie.com/embed/')
+		: null;
+const vimeoPlayer =
+	isVimeo && url
+		? url.replace('https://vimeo.com/', 'https://player.vimeo.com/video/')
+		: null;
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blockVideo', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	<div class="video-container">
+		{
+			source === 'remote' ? (
+				isYoutube ? (
+					<iframe
+						src={`${youtubeNoCookies}?autoplay=${autoplay ? 1 : 0}&loop=${
+							loop ? 1 : 0
+						}&mute=${muted || autoplay ? 1 : 0}&controls=${
+							controls ? 1 : 0
+						}&dnt=1`}
+						allow="autoplay; encrypted-media"
+						loading={aboveFold ? 'eager' : 'lazy'}
+					/>
+				) : isCloudinary ? (
+					<>
+						{CLOUDINARY_CLOUD_NAME ? (
+							<CldVideoPlayer
+								src={cloudinaryID || ''}
+								fluid={true}
+								autoplay={autoplay}
+								loop={loop}
+								muted={muted || autoplay}
+								controls={controls}
+								width={width || undefined}
+								height={height || undefined}
+								colors={{
+									accent: 'var(--color-primary)',
+								}}
+								sourceTypes={['hls']}
+								transformation={{
+									streaming_profile: 'hd',
+								}}
+								preload={aboveFold ? 'auto' : 'none'}
+								cloudinaryAnalytics={false}
+								analytics={false}
+							/>
+						) : (
+							<div class="error rounded border border-red-400 bg-red-100 p-4 text-red-700">
+								<p>Error: Cloudinary Cloud Name is not configured.</p>
+								<p class="mt-2 text-sm">
+									Please set the PUBLIC_CLOUDINARY_CLOUD_NAME environment
+									variable.
+								</p>
+							</div>
+						)}
+					</>
+				) : isVimeo ? (
+					<>
+						<div class="vimeo-container">
+							<iframe
+								src={`${vimeoPlayer}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=${
+									autoplay ? 1 : 0
+								}&loop=${loop ? 1 : 0}&muted=${
+									muted || autoplay ? 1 : 0
+								}&controls=${controls ? 1 : 0}&dnt=1`}
+								allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+								style="position:absolute;top:0;left:0;width:100%;height:100%;"
+								title="Vimeo video player"
+								loading={aboveFold ? 'eager' : 'lazy'}
+							/>
+						</div>
+						<script src="https://player.vimeo.com/api/player.js" />
+					</>
+				) : (
+					<div class="error">
+						<p class="text-red-500">
+							Der Video-Link ist ungültig. Bitte überprüfe ihn.
+						</p>
+					</div>
+				)
+			) : (
+				<video
+					preload={aboveFold ? 'auto' : 'none'}
+					id={file?.identifier ? `${file.identifier}` : undefined}
+					muted={muted || autoplay}
+					autoplay={autoplay}
+					loop={loop}
+					width={width || undefined}
+					height={height || undefined}
+					controls={controls}
+					playsinline={autoplay}
+					poster={thumb}
+					class:list={[full, cursor, file?.classes, 'w-full']}
+				>
+					<source
+						src={aboveFold ? file?.url : undefined}
+						data-src={file?.url}
+						type="video/mp4"
+					/>
+				</video>
+			)
+		}
+		<div
+			class="text-content absolute left-2/4 top-2/4 z-[1] w-4/5 max-w-[75%] -translate-x-2/4 -translate-y-2/4"
+		>
+			{
+				toggle ? (
+					<Level
+						level={headingLevel}
+						set:html={text}
+						class:list={[
+							`title font--${size}`,
+							`text--${textcolor}`,
+							`text--${align}`,
+						]}
+					/>
+				) : null
+			}
+		</div>
+	</div>
+</div>
+
+<style lang="css" define:vars={{ ratioDesktop, ratioMobile, font }}>
+	.title {
+		font-family: var(--font);
+	}
+
+	iframe {
+		@apply aspect-[var(--ratioMobile)] h-auto w-full lg:aspect-[var(--ratioDesktop)];
+	}
+
+	.vimeo-container {
+		position: relative;
+		padding-top: calc(100% / (var(--ratioDesktop)));
+	}
+
+	video {
+		@apply w-full;
+	}
+</style>
+
+<script is:inline define:vars={{ cursor }}>
+	if (cursor) {
+		document.addEventListener('DOMContentLoaded', function () {
+			const video = document.querySelectorAll('video');
+
+			video.forEach((item) => {
+				item.addEventListener('click', () => {
+					if (item.paused) {
+						item.play();
+					} else {
+						item.pause();
+					}
+				});
+			});
+		});
+	}
+	document.addEventListener('DOMContentLoaded', function () {
+		const lazyVideos = [].slice.call(document.querySelectorAll('video'));
+
+		if ('IntersectionObserver' in window) {
+			const lazyVideoObserver = new IntersectionObserver(function (entries) {
+				entries.forEach(function (video) {
+					if (video.isIntersecting) {
+						for (const source in video.target.children) {
+							const videoSource = video.target.children[source];
+							if (
+								typeof videoSource.tagName === 'string' &&
+								videoSource.tagName === 'SOURCE' &&
+								videoSource.dataset.src &&
+								!videoSource.src
+							) {
+								videoSource.src = videoSource.dataset.src;
+							}
+						}
+
+						video.target.load();
+						video.target.classList.remove('lazy');
+						lazyVideoObserver.unobserve(video.target);
+					}
+				});
+			});
+
+			lazyVideos.forEach(function (lazyVideo) {
+				lazyVideoObserver.observe(lazyVideo);
+			});
+		}
+	});
+</script>

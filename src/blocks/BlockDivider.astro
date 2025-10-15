@@ -1,0 +1,32 @@
+---
+import type { BlockDividerComponentProps } from '@app-types/components.types';
+
+const {
+	spacingMobileTop,
+	spacingMobileBottom,
+	spacingDesktopTop,
+	spacingDesktopBottom,
+	metadata,
+} = Astro.props as BlockDividerComponentProps;
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blockDivider', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+>
+</div>
+
+<style
+	lang="css"
+	define:vars={{
+		spacingDesktopBottom,
+		spacingDesktopTop,
+		spacingMobileBottom,
+		spacingMobileTop,
+	}}
+>
+	.blockDivider {
+		@apply pb-[var(--spacingMobileBottom)] pt-[var(--spacingMobileTop)] lg:pb-[var(--spacingDesktopBottom)] lg:pt-[var(--spacingDesktopTop)];
+	}
+</style>

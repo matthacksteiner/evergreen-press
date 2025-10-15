@@ -1,0 +1,15 @@
+---
+import type { PreviewErrorComponentProps } from '@app-types/components.types';
+
+interface Props {
+	title: string;
+	message: string;
+}
+
+const { title, message } = Astro.props as PreviewErrorComponentProps;
+---
+
+<div class="p-8">
+	<h1 class="text-2xl font-bold text-red-600">{title}</h1>
+	<p class="mt-4">{message}</p>
+</div>

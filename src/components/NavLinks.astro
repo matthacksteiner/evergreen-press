@@ -1,0 +1,267 @@
+---
+import type { NavLinksComponentProps } from '@app-types/components.types';
+import Button from '@blocks/BlockButton.astro';
+import { isPreviewMode, ensureTrailingSlash } from '@lib/helpers';
+
+// Props and parameters
+const { data, global, links } = Astro.props as NavLinksComponentProps;
+const { lang } = Astro.params;
+const path = Astro.url.pathname;
+
+// Language settings
+const currentLang = data.lang;
+const translations = global.translations;
+const defaultLang = global.defaultLang.code;
+const prefixDefaultLocale = global.prefixDefaultLocale;
+const effectiveLang = lang || currentLang;
+
+// UI settings
+const logoAlign = global.logoAlign;
+const isPreview = isPreviewMode();
+
+// Type for nav link item
+type NavLinkItem = NonNullable<typeof links>[number];
+
+// Utility function for common classes
+const getCommonClasses = (
+	item: NavLinkItem,
+	isActive: boolean,
+	isLast: boolean
+) => [
+	'nav-link',
+	'max-lg:mb-8',
+	logoAlign === 'center' ? 'lg:my-2' : 'lg:mr-16 2xl:mr-24',
+	isActive && 'active',
+	isLast && '!mr-0',
+	...(Array.isArray(item.classes) ? item.classes : [item.classes]),
+];
+---
+
+{
+	links &&
+		links.map((item, index) => {
+			if (!item) return null;
+			const isUrl = item.type === 'url';
+			const isPopup = item.popup === true;
+
+			// Determine if we should include language prefix
+			const shouldIncludeLanguage =
+				translations.length > 0 &&
+				effectiveLang &&
+				(prefixDefaultLocale || effectiveLang !== defaultLang);
+
+			// Construct base href
+			let href = isUrl
+				? item.href
+				: item.hash
+					? `${shouldIncludeLanguage ? '/' + effectiveLang + '/' : '/'}#${item.hash}`
+					: shouldIncludeLanguage
+						? ensureTrailingSlash(`/${effectiveLang}/${item.uri}`)
+						: ensureTrailingSlash(`/${item.uri}`);
+
+			// Handle preview mode URLs
+			if (isPreview && !isUrl) {
+				const parts = href.split('/').filter(Boolean);
+				// Remove hash fragment if present for URL manipulation
+				const hashIndex = parts.findIndex((part) => part.includes('#'));
+				const hashFragment =
+					hashIndex !== -1 ? parts[hashIndex].split('#')[1] : '';
+				const cleanParts =
+					hashIndex !== -1
+						? [...parts.slice(0, hashIndex), parts[hashIndex].split('#')[0]]
+						: parts;
+
+				if (shouldIncludeLanguage) {
+					const hasLang = cleanParts[0] === effectiveLang;
+					const finalParts = hasLang
+						? cleanParts
+						: [effectiveLang, ...cleanParts];
+					href = ensureTrailingSlash(
+						`/preview/${finalParts.filter(Boolean).join('/')}`
+					);
+				} else {
+					href = ensureTrailingSlash(
+						`/preview/${cleanParts.filter(Boolean).join('/')}`
+					);
+				}
+
+				// Re-add hash fragment if it existed
+				if (hashFragment) {
+					href = `${href}#${hashFragment}`;
+				}
+			}
+
+			// Link attributes
+			const target = isUrl ? `${isPopup ? '_blank' : '_self'}` : undefined;
+			const rel = isUrl ? `${isPopup ? 'noopener noreferrer' : ''}` : undefined;
+
+			// Active state logic: exclude anchor links when on homepage
+			const isHomepage =
+				path === '/' ||
+				path === `/${effectiveLang}` ||
+				path === `/${effectiveLang}/`;
+			const isAnchorLink = !!item.hash;
+
+			// Modern hierarchical path matching - elegant solution using startsWith
+			const normalizePath = (pathStr: string): string => {
+				// Remove trailing slash for consistent comparison, but preserve root "/"
+				return pathStr === '/' ? '/' : pathStr.replace(/\/$/, '');
+			};
+
+			const currentPath = normalizePath(path);
+			const expectedPath = shouldIncludeLanguage
+				? `/${effectiveLang}/${item.uri}`
+				: `/${item.uri}`;
+			const normalizedExpectedPath = normalizePath(expectedPath);
+			const alternativeExpectedPath = normalizePath(`/${item.uri}`);
+
+			// Check for hierarchical match: exact match OR current path starts with expected path + '/'
+			const isExactMatch =
+				currentPath === normalizedExpectedPath ||
+				currentPath === alternativeExpectedPath;
+			const isParentMatch =
+				currentPath.startsWith(normalizedExpectedPath + '/') ||
+				currentPath.startsWith(alternativeExpectedPath + '/');
+
+			const isActive =
+				!(isHomepage && isAnchorLink) && (isExactMatch || isParentMatch);
+
+			const isLast = translations.length === 0 && index === links.length - 1;
+
+			// Render appropriate component
+			if (item.classes?.includes('cta')) {
+				return (
+					<Button
+						link={{ ...item, href }}
+						global={global}
+						className={getCommonClasses(item, isActive, isLast).join(' ')}
+						data-astro-prefetch
+					>
+						{item.title}
+					</Button>
+				);
+			}
+
+			return (
+				<a
+					href={href}
+					target={target}
+					rel={rel}
+					class:list={getCommonClasses(item, isActive, isLast)}
+					data-astro-prefetch
+				>
+					{item.title}
+				</a>
+			);
+		})
+}
+
+<style lang="css" is:global>
+	/* Header navigation active color variants */
+	.headerColorCurrent {
+		&--primary .nav-link.active {
+			@apply text-primary;
+		}
+
+		&--secondary .nav-link.active {
+			@apply text-secondary;
+		}
+
+		&--tertiary .nav-link.active {
+			@apply text-tertiary;
+		}
+
+		&--white .nav-link.active {
+			@apply text-white;
+		}
+
+		&--black .nav-link.active {
+			@apply text-black;
+		}
+
+		&--transparent .nav-link.active {
+			@apply text-transparent;
+		}
+	}
+
+	/* Header active state (when scrolled) */
+	.header--active .headerColorCurrentActive {
+		&--primary .nav-link.active {
+			@apply text-primary;
+		}
+
+		&--secondary .nav-link.active {
+			@apply text-secondary;
+		}
+
+		&--tertiary .nav-link.active {
+			@apply text-tertiary;
+		}
+
+		&--white .nav-link.active {
+			@apply text-white;
+		}
+
+		&--black .nav-link.active {
+			@apply text-black;
+		}
+
+		&--transparent .nav-link.active {
+			@apply text-transparent;
+		}
+	}
+
+	/* Hamburger navigation active color variants */
+	.hamburgerFontColorCurrent {
+		&--primary .nav-link.active {
+			@apply text-primary;
+		}
+
+		&--secondary .nav-link.active {
+			@apply text-secondary;
+		}
+
+		&--tertiary .nav-link.active {
+			@apply text-tertiary;
+		}
+
+		&--white .nav-link.active {
+			@apply text-white;
+		}
+
+		&--black .nav-link.active {
+			@apply text-black;
+		}
+
+		&--transparent .nav-link.active {
+			@apply text-transparent;
+		}
+	}
+
+	/* Hamburger active state (when header is scrolled) */
+	.header--active .hamburgerFontColorCurrentActive {
+		&--primary .nav-link.active {
+			@apply text-primary;
+		}
+
+		&--secondary .nav-link.active {
+			@apply text-secondary;
+		}
+
+		&--tertiary .nav-link.active {
+			@apply text-tertiary;
+		}
+
+		&--white .nav-link.active {
+			@apply text-white;
+		}
+
+		&--black .nav-link.active {
+			@apply text-black;
+		}
+
+		&--transparent .nav-link.active {
+			@apply text-transparent;
+		}
+	}
+</style>

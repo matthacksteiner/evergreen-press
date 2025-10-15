@@ -1,0 +1,240 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	:root {
+		--scrollbar-width: 17px;
+		--scrollbar-threshold: calc(1920px + var(--scrollbar-width));
+	}
+
+	html {
+		@apply overflow-x-hidden;
+	}
+	::selection {
+		@apply bg-primary text-white;
+	}
+	@-moz-document url-prefix() {
+		img {
+			color: transparent;
+		}
+		picture img {
+			color: transparent;
+		}
+	}
+}
+
+.container {
+	@apply max-md:max-w-full;
+}
+
+section {
+	@apply relative;
+}
+
+.h-screenHalf {
+	@apply h-screen-1/2;
+}
+
+.bg {
+	&--primary {
+		@apply bg-primary;
+	}
+
+	&--secondary {
+		@apply bg-secondary;
+	}
+
+	&--tertiary {
+		@apply bg-tertiary;
+	}
+
+	&--black {
+		@apply bg-black;
+	}
+
+	&--white {
+		@apply bg-white;
+	}
+
+	&--transparent {
+		@apply bg-transparent;
+	}
+}
+
+.text {
+	&--primary {
+		@apply text-primary;
+	}
+
+	&--secondary {
+		@apply text-secondary;
+	}
+
+	&--tertiary {
+		@apply text-tertiary;
+	}
+
+	&--black {
+		@apply text-black;
+	}
+
+	&--white {
+		@apply text-white;
+	}
+
+	&--transparent {
+		@apply text-transparent;
+	}
+
+	&--left {
+		@apply text-left;
+	}
+
+	&--leftCenter {
+		@apply mx-auto text-left;
+	}
+
+	&--center {
+		@apply mx-auto text-center;
+	}
+
+	&--right {
+		@apply ml-auto text-right;
+	}
+
+	&--rightCenter {
+		@apply mx-auto text-right;
+	}
+}
+
+.borderColor {
+	&--primary {
+		@apply border-primary;
+	}
+
+	&--secondary {
+		@apply border-secondary;
+	}
+
+	&--tertiary {
+		@apply border-tertiary;
+	}
+
+	&--black {
+		@apply border-black;
+	}
+
+	&--white {
+		@apply border-white;
+	}
+
+	&--transparent {
+		@apply border-transparent;
+	}
+}
+
+.align-vert {
+	&--start {
+		@apply items-start;
+	}
+
+	&--center {
+		@apply items-center;
+	}
+
+	&--end {
+		@apply items-end;
+	}
+
+	&--normal {
+		justify-items: normal;
+	}
+}
+
+.align-hor {
+	&--start {
+		@apply justify-items-start;
+	}
+
+	&--center {
+		@apply justify-items-center;
+	}
+
+	&--end {
+		@apply justify-items-end;
+	}
+
+	&--normal {
+		justify-items: normal;
+	}
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	text-wrap: balance;
+}
+
+.kirby-text {
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		@apply mb-1 pt-5 lg:pt-5;
+	}
+
+	& > h1:first-child,
+	& > h2:first-child,
+	& > h3:first-child,
+	& > h4:first-child,
+	& > h5:first-child,
+	& > h6:first-child {
+		@apply pt-0;
+	}
+
+	p + p {
+		@apply pt-4 lg:pt-6;
+	}
+
+	ul,
+	ol {
+		@apply list-inside;
+	}
+
+	p + ul,
+	p + ol {
+		@apply mb-4 lg:mb-8;
+	}
+
+	ul {
+		@apply list-disc;
+	}
+
+	ol {
+		@apply list-decimal;
+	}
+
+	ul > li,
+	ol > li {
+		@apply my-1 last:mb-0 lg:my-2;
+	}
+
+	ol li:before {
+		content: '';
+		padding-left: 0.625rem;
+	}
+
+	a {
+		@apply underline underline-offset-4;
+	}
+}
+
+address {
+	font-style: normal;
+}

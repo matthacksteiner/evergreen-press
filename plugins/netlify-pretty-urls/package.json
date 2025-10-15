@@ -1,0 +1,10 @@
+{
+	"name": "netlify-pretty-urls",
+	"version": "1.0.0",
+	"description": "Ensures pretty_urls = true is preserved in generated netlify.toml",
+	"type": "module",
+	"main": "index.js",
+	"dependencies": {
+		"@iarna/toml": "^2.2.5"
+	}
+}

@@ -1,0 +1,291 @@
+---
+import { toRem } from '@lib/helpers';
+import Link from '@components/Link.astro';
+import CardContent from '@components/CardContent.astro';
+import type { BlockCardComponentProps } from '@app-types/components.types';
+
+const {
+	title,
+	text,
+	image,
+	hovertoggle,
+	hovertext,
+	linkToggle,
+	link,
+	aspectRatio,
+	justify,
+	level: Level,
+	titleSize,
+	titleFont,
+	titleAlign,
+	textSize,
+	textFont,
+	textAlign,
+	widthMobile,
+	widthDesktop,
+	widthAlign,
+	cardBackgroundColor,
+	cardBackgroundColorActive,
+	cardTextColor,
+	cardTextColorActive,
+	cardBorderColor,
+	cardBorderColorActive,
+	cardBorderWidth,
+	cardBorderRadius,
+	cardBorderPaddingDesktop,
+	cardBorderPaddingMobile,
+	metadata,
+} = Astro.props as BlockCardComponentProps;
+const cardBorderRadiusRem = cardBorderRadius
+	? toRem(Number(cardBorderRadius))
+	: '0';
+const cardBorderWidthRem = cardBorderWidth
+	? toRem(Number(cardBorderWidth))
+	: '0';
+const cardBorderPaddingDesktopRem = cardBorderPaddingDesktop
+	? toRem(Number(cardBorderPaddingDesktop))
+	: '0';
+const cardBorderPaddingMobileRem = cardBorderPaddingMobile
+	? toRem(Number(cardBorderPaddingMobile))
+	: '0';
+
+const cardContentProps = {
+	title,
+	text,
+	image,
+	hovertoggle,
+	justify,
+	Level,
+	titleSize,
+	titleFont,
+	titleAlign,
+	textSize,
+	textFont,
+	textAlign,
+	widthMobile,
+	widthDesktop,
+	widthAlign,
+};
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={[
+		'blockCard',
+		'blocks',
+		'group',
+		`cardBg--${cardBackgroundColor}`,
+		`cardBgActive--${cardBackgroundColorActive}`,
+		`cardText--${cardTextColor}`,
+		`cardTextActive--${cardTextColorActive}`,
+		`cardBorder--${cardBorderColor}`,
+		`cardBorderActive--${cardBorderColorActive}`,
+		`cardAspectRatio--${aspectRatio}`,
+		'transition-all',
+		'duration-300',
+		'relative',
+		'overflow-hidden',
+		metadata?.classes,
+	]}
+	{...metadata?.attributes}
+>
+	{
+		linkToggle && link && (
+			<Link link={link as any}>
+				<CardContent {...cardContentProps} />
+			</Link>
+		)
+	}
+
+	{
+		hovertoggle && hovertext && (
+			<div class="card-hover absolute inset-0 flex items-start opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+				<div
+					set:html={hovertext}
+					class:list={[`font--${titleSize}`, `text--${titleAlign}`]}
+				/>
+			</div>
+		)
+	}
+
+	{!linkToggle && <CardContent {...cardContentProps} />}
+</div>
+
+<style
+	lang="css"
+	define:vars={{
+		titleFont,
+		cardBorderWidthRem,
+		cardBorderRadiusRem,
+		cardBorderPaddingDesktopRem,
+		cardBorderPaddingMobileRem,
+	}}
+>
+	.blockCard {
+		@apply rounded-[var(--cardBorderRadiusRem)] border-[length:var(--cardBorderWidthRem)] p-[var(--cardBorderPaddingMobileRem)] xl:p-[var(--cardBorderPaddingDesktopRem)];
+	}
+
+	.card-hover {
+		@apply p-[var(--cardBorderPaddingMobileRem)] xl:p-[var(--cardBorderPaddingDesktopRem)];
+		font-family: var(--titleFont);
+	}
+
+	.cardText {
+		&--primary {
+			@apply text-primary;
+		}
+		&--secondary {
+			@apply text-secondary;
+		}
+		&--tertiary {
+			@apply text-tertiary;
+		}
+		&--black {
+			@apply text-black;
+		}
+		&--white {
+			@apply text-white;
+		}
+		&--transparent {
+			@apply text-transparent;
+		}
+	}
+
+	.cardTextActive {
+		&--primary {
+			@apply hover:text-primary;
+		}
+		&--secondary {
+			@apply hover:text-secondary;
+		}
+		&--tertiary {
+			@apply hover:text-tertiary;
+		}
+		&--black {
+			@apply hover:text-black;
+		}
+		&--white {
+			@apply hover:text-white;
+		}
+		&--transparent {
+			@apply hover:text-transparent;
+		}
+	}
+
+	.cardBg {
+		&--primary {
+			@apply bg-primary;
+		}
+		&--secondary {
+			@apply bg-secondary;
+		}
+		&--tertiary {
+			@apply bg-tertiary;
+		}
+		&--black {
+			@apply bg-black;
+		}
+		&--white {
+			@apply bg-white;
+		}
+		&--transparent {
+			@apply bg-transparent;
+		}
+	}
+
+	.cardBgActive {
+		&--primary {
+			@apply hover:bg-primary;
+		}
+		&--secondary {
+			@apply hover:bg-secondary;
+		}
+		&--tertiary {
+			@apply hover:bg-tertiary;
+		}
+		&--black {
+			@apply hover:bg-black;
+		}
+		&--white {
+			@apply hover:bg-white;
+		}
+		&--transparent {
+			@apply hover:bg-transparent;
+		}
+	}
+
+	.cardBorder {
+		&--primary {
+			@apply border-primary;
+		}
+		&--secondary {
+			@apply border-secondary;
+		}
+		&--tertiary {
+			@apply border-tertiary;
+		}
+		&--black {
+			@apply border-black;
+		}
+		&--white {
+			@apply border-white;
+		}
+		&--transparent {
+			@apply border-transparent;
+		}
+	}
+
+	.cardBorderActive {
+		&--primary {
+			@apply hover:border-primary;
+		}
+		&--secondary {
+			@apply hover:border-secondary;
+		}
+		&--tertiary {
+			@apply hover:border-tertiary;
+		}
+		&--black {
+			@apply hover:border-black;
+		}
+		&--white {
+			@apply hover:border-white;
+		}
+		&--transparent {
+			@apply hover:border-transparent;
+		}
+	}
+
+	.cardAspectRatio {
+		&--1\/1 {
+			@apply aspect-[1/1];
+		}
+		&--3\/2 {
+			@apply aspect-[3/2];
+		}
+		&--4\/3 {
+			@apply aspect-[4/3];
+		}
+		&--5\/4 {
+			@apply aspect-[5/4];
+		}
+		&--16\/9 {
+			@apply aspect-[16/9];
+		}
+		&--21\/9 {
+			@apply aspect-[21/9];
+		}
+		&--2\/3 {
+			@apply aspect-[2/3];
+		}
+		&--3\/4 {
+			@apply aspect-[3/4];
+		}
+		&--4\/5 {
+			@apply aspect-[4/5];
+		}
+		&--1\/2 {
+			@apply aspect-[1/2];
+		}
+	}
+</style>

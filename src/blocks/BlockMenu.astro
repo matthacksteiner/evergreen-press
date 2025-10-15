@@ -1,0 +1,57 @@
+---
+import Link from '@components/Link.astro';
+import type { BlockMenuComponentProps } from '@app-types/components.types';
+
+const { items, font, align, color, size, gap, metadata } =
+	Astro.props as BlockMenuComponentProps;
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blockMenu', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	<nav>
+		<ul class:list={['list', 'flex', 'flex-col']}>
+			{
+				items &&
+					items
+						.filter((item) => item.linkobject && item.linkobject.type)
+						.map((item) => {
+							const link = item.linkobject;
+							return (
+								<li>
+									<Link
+										link={link as any}
+										class:list={[
+											`text`,
+											`font--${size}`,
+											`text--${color}`,
+											`text--${align}`,
+										]}
+									/>
+								</li>
+							);
+						})
+			}
+		</ul>
+	</nav>
+</div>
+
+<style
+	set:html={`
+	:root {
+		--gap: ${gap}px;
+	}
+  `}
+></style>
+
+<style lang="css" define:vars={{ font }}>
+	.blockMenu {
+		font-family: var(--font);
+	}
+
+	.list {
+		@apply gap-y-[var(--gap)];
+	}
+</style>

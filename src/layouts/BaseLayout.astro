@@ -1,0 +1,211 @@
+---
+import { getFonts, getSizes } from '@lib/fonts';
+import { isPreviewMode, toRem } from '@lib/helpers';
+import '@styles/global.css';
+import '@styles/custom.css';
+import Header from '@components/Header.astro';
+import Footer from '@components/Footer.astro';
+import KirbyMeta from '@components/KirbyMeta.astro';
+import CookieConsent from '@components/CookieConsent.astro';
+
+const { data, global, pageTitle } = Astro.props;
+const fontsData = await getFonts();
+const fonts = fontsData.css;
+const fontsList = fontsData.fonts;
+const sizes = await getSizes();
+const lang = data.lang;
+
+// Check if we're in preview mode to avoid preloading fonts
+const inPreviewMode = isPreviewMode();
+
+const pageId = data.uid;
+const colorPrimary = global.colorPrimary;
+const colorSecondary = global.colorSecondary;
+const colorTertiary = global.colorTertiary;
+const colorBlack = global.colorBlack;
+const colorWhite = global.colorWhite;
+const colorTransparent = global.colorTransparent;
+const colorBackground = global.colorBackground;
+
+const gridGapMobile = toRem(global.gridGapMobile) || '1.25rem';
+const gridMarginMobile = toRem(global.gridMarginMobile) || '1.25rem';
+const gridGapDesktop = toRem(global.gridGapDesktop) || '2.5rem';
+const gridMarginDesktop = toRem(global.gridMarginDesktop) || '2.5rem';
+const gridBlockMobile = toRem(global.gridBlockMobile) || '1rem';
+const gridBlockDesktop = toRem(global.gridBlockDesktop) || '1rem';
+
+const url = Astro.url.origin;
+const description = data.meta.description;
+const favSvg = global.favicon.svgSrc;
+const favIco = global.favicon.icoSrc;
+const pngAppleSrc = global.favicon.pngAppleSrc;
+const png192Src = global.favicon.png192Src;
+const png512Src = global.favicon.png512Src;
+
+const searchConsoleToggle = global.searchConsoleToggle;
+const searchConsoleCode = global.searchConsoleCode;
+
+const googleAnalyticsToggle = global.googleAnalyticsToggle;
+const googleAnalyticsCode = global.googleAnalyticsCode;
+---
+
+<!DOCTYPE html>
+<html
+	lang={lang}
+	class:list={[`bg--${colorBackground}`, 'full', 'motion-safe:scroll-smooth']}
+>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<KirbyMeta data={data} global={global} pageTitle={pageTitle} />
+
+		<!-- Add font CSS first so it's immediately available -->
+		<style set:html={fonts}></style>
+		<style set:html={sizes}></style>
+
+		{
+			/* Only preload woff2 fonts if they exist and will be used */
+			!inPreviewMode &&
+				fontsList.map((font) => {
+					if (!font.woff2) return null;
+					// Extract the filename from the original URL to match local CSS references
+					const fileName = font.woff2.split('/').pop();
+					return (
+						<link
+							rel="preload"
+							href={`/fonts/${fileName}`}
+							as="font"
+							type="font/woff2"
+							crossorigin="anonymous"
+						/>
+					);
+				})
+		}
+
+		<link
+			rel="icon"
+			type="image/svg+xml"
+			href={`${favSvg || '/favicons/favicon.svg'}`}
+		/>
+		<link
+			rel="icon"
+			type="image/x-icon"
+			href={`${favIco || '/favicons/favicon.ico'}`}
+		/>
+		<link
+			rel="apple-touch-icon"
+			href={`${pngAppleSrc || '/favicons/apple-touch-icon.png'}`}
+		/>
+		<link rel="manifest" id="manifestPlaceholder" />
+		<meta name="theme-color" content={`${colorPrimary}`} />
+		<link rel="sitemap" href="/sitemap-index.xml" />
+		{
+			searchConsoleToggle && (
+				<meta name="google-site-verification" content={searchConsoleCode} />
+			)
+		}
+	</head>
+	<body
+		id={pageId}
+		class="mx-auto items-center overflow-x-hidden"
+		data-png192src={png192Src}
+		data-png512src={png512Src}
+		data-url={url}
+		data-color={colorPrimary}
+		data-description={description}
+	>
+		<Header data={data} global={global} lang={lang} />
+
+		<main class="flex min-h-[100vh] w-full flex-col">
+			<slot />
+		</main>
+		<Footer data={data} global={global} />
+		<style
+			is:global
+			lang="css"
+			define:vars={{
+				colorPrimary,
+				colorSecondary,
+				colorTertiary,
+				colorBlack,
+				colorWhite,
+				colorTransparent,
+				gridGapMobile,
+				gridMarginMobile,
+				gridGapDesktop,
+				gridMarginDesktop,
+				gridBlockMobile,
+				gridBlockDesktop,
+			}}
+		>
+			:root {
+				--color-primary: var(--colorPrimary);
+				--color-secondary: var(--colorSecondary);
+				--color-tertiary: var(--colorTertiary);
+				--color-black: var(--colorBlack);
+				--color-white: var(--colorWhite);
+				--color-transparent: var(--colorTransparent);
+				--grid-margin-mobile: var(--gridMarginMobile);
+				--grid-margin-desktop: var(--gridMarginDesktop);
+				--scrollbar-width: 17px;
+				--scrollbar-threshold: calc(1920px + var(--scrollbar-width));
+			}
+
+			.grid-default {
+				@apply grid grid-cols-6 gap-x-[var(--gridGapMobile)] max-lg:gap-y-[var(--gridGapMobile)] lg:grid-cols-12 lg:gap-x-[var(--gridGapDesktop)];
+			}
+
+			.blocks ~ .blocks:not(.blockDivider) {
+				@apply mt-[var(--gridBlockMobile)] lg:mt-[var(--gridBlockDesktop)];
+			}
+		</style>
+		<script>
+			const png192Src = document.querySelector('body')?.dataset.png192src;
+			const png512Src = document.querySelector('body')?.dataset.png512src;
+			const url = document.querySelector('body')?.dataset.url;
+			const color = document.querySelector('body')?.dataset.color;
+			const title = document.querySelector('title')?.innerText;
+			const description = document.querySelector('body')?.dataset.description;
+			const myDynamicManifest = {
+	name: title,
+	short_name: title,
+	description,
+
+	start_url: url,
+	background_color: '#ffffff',
+	theme_color: color,
+	display: 'standalone',
+	icons: [
+		{
+			src: png192Src || `${url  }/favicons/android-chrome-192x192.png`,
+			sizes: '192x192',
+			type: 'image/png',
+		},
+		{
+			src: png512Src || `${url  }/favicons/android-chrome-512x512.png`,
+			sizes: '512x512',
+			type: 'image/png',
+		},
+	],
+};
+			const stringManifest = JSON.stringify(myDynamicManifest);
+			const blob = new Blob([stringManifest], { type: 'application/json' });
+			const manifestURL = URL.createObjectURL(blob);
+			const doc = document.querySelector('#manifestPlaceholder');
+			doc?.setAttribute('href', manifestURL);
+		</script>
+
+		{
+			googleAnalyticsToggle && (
+				<CookieConsent
+					googleAnalyticsToggle={googleAnalyticsToggle}
+					googleAnalyticsCode={googleAnalyticsCode}
+					global={global}
+					lang={lang}
+				/>
+			)
+		}
+		<script src="@scripts/main.js"></script>
+	</body>
+</html>

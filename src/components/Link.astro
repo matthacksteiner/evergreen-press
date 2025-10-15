@@ -1,0 +1,108 @@
+---
+/**
+ * Link Component
+ *
+ * Renders different types of links (URL, page, file, email, telephone) with proper attributes
+ * and language handling. Supports popup windows and file downloads.
+ *
+ * @component
+ * @example
+ * ```astro
+ * <Link
+ *   link={{
+ *     type: 'url',
+ *     href: 'https://example.com',
+ *     title: 'External Link',
+ *     popup: true
+ *   }}
+ *   class="custom-class"
+ * />
+ * ```
+ */
+
+import type {
+	BaseLink,
+	PageLink,
+	FileLink,
+	LinkComponentProps,
+} from '@app-types/components.types';
+import { ensureTrailingSlash } from '@lib/helpers';
+
+interface Props extends LinkComponentProps {}
+
+const { link, class: className, ...rest } = Astro.props;
+const { lang } = Astro.params;
+const currentLang = lang;
+
+// Input validation
+if (!link) {
+	throw new Error('Missing link prop in Link.astro');
+}
+
+if (!link.type) {
+	throw new Error('Link must have type properties');
+}
+
+if (link.type === 'page' && !('uri' in link)) {
+	throw new Error('Page links must include a uri property');
+}
+
+if (link.type === 'file' && !('uri' in link) && !link.href) {
+	throw new Error('File links must include either a uri or href property');
+}
+
+let href = '';
+
+switch (link.type) {
+	case 'url':
+		href = link.href;
+		break;
+	case 'page':
+		// Extract URI and hash from the page link, defaulting URI to empty string if not provided
+		const { uri = '', hash } = link as PageLink;
+
+		if (uri === '') {
+			// For home page (empty URI), construct URL with just the language prefix
+			// Format: /language/ or / (if no language) - always with trailing slash
+			// Add hash fragment if it exists
+			const baseUrl = currentLang ? `/${currentLang}/` : '/';
+			href = `${baseUrl}${hash ? `#${hash}` : ''}`;
+		} else {
+			// For other pages, construct URL with language prefix and URI
+			// Format: /language/uri/ or /uri/ (if no language) - always with trailing slash
+			// Add hash fragment if it exists
+			const baseUrl = currentLang ? `/${currentLang}/${uri}` : `/${uri}`;
+			const urlWithTrailingSlash = ensureTrailingSlash(baseUrl, true);
+			href = `${urlWithTrailingSlash}${hash ? `#${hash}` : ''}`;
+		}
+		break;
+	case 'file':
+		href = (link as FileLink).uri || link.href;
+		break;
+	case 'email':
+		href = link.href;
+		break;
+	case 'tel':
+		href = `tel:${link.href}`;
+		break;
+	default:
+		// Fallback for any unhandled link types - cast to BaseLink to access href
+		href = (link as BaseLink).href || '#';
+}
+
+const attributes = {
+	href,
+	...(link.popup ? { target: '_blank', rel: 'noopener' } : {}),
+	...(link.type === 'file' ? { download: '' } : {}),
+};
+
+const defaultContent = link.title
+	? link.title
+	: link.type === 'page'
+	? (link as PageLink).uri
+	: link.href;
+---
+
+<a {...attributes} {...rest} class:list={[className]}>
+	<slot>{defaultContent}</slot>
+</a>

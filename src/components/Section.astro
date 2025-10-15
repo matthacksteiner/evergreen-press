@@ -1,0 +1,174 @@
+---
+import type { SectionComponentProps } from '@app-types/components.types';
+import type { SectionItem, Language } from '@app-types/api.types';
+import { toRem } from '@lib/helpers';
+import Layouts from '@components/Layouts.astro';
+import SectionImage from '@components/SectionImage.astro';
+import Pagination from '@components/Pagination.astro';
+
+const { data, global, page } = Astro.props as SectionComponentProps;
+const { lang } = Astro.params;
+const { settings } = data;
+
+// The problem: page.data contains ALL items instead of just this page's items
+// We need to slice the data according to the current page
+const pageItems = page.data.slice(0, page.size);
+
+const {
+	ratio,
+	grid: { span, gap, gapMobile, gapHorizontal, gapHorizontalMobile },
+	title,
+	text,
+	caption,
+} = settings;
+
+const {
+	toggle: titleToggle,
+	level: TitleLevel,
+	font: titleFont,
+	color: titleColor,
+	size: titleSize,
+	align: titleAlign,
+} = title;
+
+const {
+	toggle: textToggle,
+	font: textFont,
+	color: textColor,
+	size: textSize,
+	align: textAlign,
+} = text;
+
+const {
+	align: captionAlign,
+	controls: captionControls,
+	overlayRange: captionOverlayRange,
+	color: captionColor,
+} = caption;
+const pageSize = page.size;
+const pageTotal = page.total;
+const layoutPre = data.layoutPre;
+const layoutPost = data.layoutPost;
+const ratioMobile = settings.ratioMobile;
+const spanMobile = settings.grid.spanMobile;
+const gapVerticalDesktop = toRem(gap);
+const gapVerticalMobile = toRem(gapMobile);
+const gapHorizontalDesktop = toRem(gapHorizontal);
+const gapHorizontalMobileValue = toRem(gapHorizontalMobile);
+
+const pathname = Astro.url.pathname.split('/');
+const translations = global.translations.map((lang: Language) => lang.code);
+const prefixDefaultLocale = global.prefixDefaultLocale;
+const currentLang = data.lang;
+const defaultLang = global.defaultLang.code;
+const firstPath =
+	translations.length < 1 ||
+	(!prefixDefaultLocale && defaultLang === currentLang)
+		? pathname[1]
+		: pathname[1] + '/' + pathname[2];
+---
+
+{
+	layoutPre && (
+		<Layouts
+			layouts={layoutPre}
+			global={global}
+			class="layoutPre"
+			data={data}
+		/>
+	)
+}
+
+<section class="section container">
+	<div class="grid-default">
+		{
+			pageItems
+				.filter(
+					(item: SectionItem & { status?: string; position?: number }) =>
+						item.status === 'listed'
+				)
+				.sort(
+					(
+						a: SectionItem & { status?: string; position?: number },
+						b: SectionItem & { status?: string; position?: number }
+					) => (a.position || 0) - (b.position || 0)
+				)
+				.map((item: SectionItem) => (
+					<div
+						class:list={[
+							`section-item`,
+							`col-span-${spanMobile}`,
+							`lg:col-span-${span}`,
+						]}
+					>
+						<SectionImage
+							item={item}
+							global={global}
+							ratioMobile={ratioMobile}
+							ratioDesktop={ratio}
+							span={span}
+							titleLevel={TitleLevel}
+							titleFont={titleFont}
+							titleColor={titleColor}
+							titleSize={titleSize}
+							titleAlign={titleAlign}
+							textFont={textFont}
+							textColor={textColor}
+							textSize={textSize}
+							textAlign={textAlign}
+							fontTitleToggle={titleToggle}
+							fontTextToggle={textToggle}
+							captionAlign={captionAlign}
+							captionControls={captionControls}
+							captionOverlayRange={captionOverlayRange}
+							captionColor={captionColor}
+							titleClass="title"
+							textClass="text"
+							textContentClass="section-text-content"
+							lang={lang}
+							backgroundContainer="container"
+						/>
+					</div>
+				))
+		}
+	</div>
+	{
+		pageSize < pageTotal && (
+			<Pagination
+				global={global}
+				length={page.lastPage}
+				currentUrl={page.url.current}
+				currentPage={page.currentPage}
+				firstUrl={`/${firstPath}`}
+				prevUrl={page.url.prev}
+				nextUrl={page.url.next}
+				lastUrl={`/${firstPath}/${page.lastPage}`}
+			/>
+		)
+	}
+</section>
+
+{
+	layoutPost && (
+		<Layouts
+			layouts={layoutPost}
+			global={global}
+			class="layoutPost"
+			data={data}
+		/>
+	)
+}
+
+<style
+	lang="css"
+	define:vars={{
+		gapVerticalDesktop,
+		gapVerticalMobile,
+		gapHorizontalDesktop,
+		gapHorizontalMobileValue,
+	}}
+>
+	.grid-default {
+		@apply gap-x-[var(--gapHorizontalMobileValue)] gap-y-[var(--gapVerticalMobile)] lg:gap-x-[var(--gapHorizontalDesktop)] lg:gap-y-[var(--gapVerticalDesktop)];
+	}
+</style>

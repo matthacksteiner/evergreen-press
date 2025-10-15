@@ -1,0 +1,186 @@
+---
+import type { HamburgerComponentProps } from '@app-types/components.types';
+import LanguagePicker from '@components/LanguagePicker.astro';
+import NavLinks from '@components/NavLinks.astro';
+const { data, global } = Astro.props as HamburgerComponentProps;
+
+const hamburgerFont = global.hamburgerFont;
+const hamburgerFontSize = global.hamburgerFontSize;
+const hamburgerFontColor = global.hamburgerFontColor;
+const hamburgerMenuColor = global.hamburgerMenuColor;
+const hamburgerMenuColorActive = global.hamburgerMenuColorActive;
+const hamburgerOverlay = global.hamburgerOverlay;
+const logoCta = global.logoCta;
+const logoAlign = global.logoAlign;
+---
+
+{
+	global.navHamburger ? (
+		<button
+			class:list={[
+				`hamburgerColor--${hamburgerMenuColor} hamburgerColorActive--${hamburgerMenuColorActive}`,
+				'c-hamburger',
+				'c-hamburger--chop',
+				'relative',
+				'z-20',
+				'flex-grow',
+				logoAlign === 'left' && 'lg:hidden',
+			]}
+			aria-label="hamburger-button"
+			aria-expanded="false"
+			aria-controls="mobile-navigation-menu"
+			type="button"
+		>
+			<div class={`c-hamburger-inner`}>
+				<span class="c-hamburger-bar" />
+				<span class="c-hamburger-bar" />
+				<span class="c-hamburger-bar" />
+			</div>
+		</button>
+	) : null
+}
+<div
+	id="mobile-navigation-menu"
+	class:list={[
+		'mobile-nav-list',
+		`hamburgerFontColorCurrent--${global.hamburgerFontColorCurrent}`,
+		`hamburgerFontColorCurrentActive--${global.hamburgerFontColorCurrentActive}`,
+		'flex',
+		'flex-col',
+		'items-center',
+		'invisible',
+		`text--${hamburgerFontColor}`,
+		`bg--${hamburgerOverlay}`,
+		`font--${hamburgerFontSize}`,
+		'top-0',
+		'left-0',
+		'mr-24',
+		'h-lvh',
+		'w-full',
+		'justify-center',
+		'text-center',
+		'opacity-0',
+		'transition-opacity',
+		'delay-100',
+		'duration-300',
+		'ease-in-out',
+		'placeholder:pointer-events-none',
+		'fixed',
+		logoAlign === 'left' && 'lg:hidden',
+	]}
+>
+	<NavLinks links={global.navHamburger} global={global} data={data} />
+	<LanguagePicker
+		global={global}
+		font={hamburgerFont}
+		class:list={[logoCta === 'center' ? 'lg:hidden' : '', 'mt-8']}
+	/>
+</div>
+
+<style lang="css" define:vars={{ hamburgerFont }}>
+	.mobile-nav-list {
+		font-family: var(--hamburgerFont);
+	}
+
+	.expanded {
+		@apply pointer-events-auto visible opacity-100;
+	}
+
+	.active {
+		@apply font-semibold;
+	}
+
+	.hamburgerColor {
+		&--primary {
+			--hamburger-color: var(--colorPrimary);
+			--hamburger-color-hover: var(--colorPrimary);
+		}
+
+		&--secondary {
+			--hamburger-color: var(--colorSecondary);
+			--hamburger-color-hover: var(--colorSecondary);
+		}
+
+		&--tertiary {
+			--hamburger-color: var(--colorTertiary);
+			--hamburger-color-hover: var(--colorTertiary);
+		}
+
+		&--white {
+			--hamburger-color: var(--colorWhite);
+			--hamburger-color-hover: var(--colorWhite);
+		}
+
+		&--black {
+			--hamburger-color: var(--colorBlack);
+			--hamburger-color-hover: var(--colorBlack);
+		}
+
+		&--transparent {
+			--hamburger-color: var(--colorTransparent);
+			--hamburger-color-hover: var(--colorTransparent);
+		}
+	}
+
+	.hamburgerColorActive {
+		&--primary {
+			--hamburger-color-active: var(--colorPrimary);
+		}
+
+		&--secondary {
+			--hamburger-color-active: var(--colorSecondary);
+		}
+
+		&--tertiary {
+			--hamburger-color-active: var(--colorTertiary);
+		}
+
+		&--white {
+			--hamburger-color-active: var(--colorWhite);
+		}
+
+		&--black {
+			--hamburger-color-active: var(--colorBlack);
+		}
+
+		&--transparent {
+			--hamburger-color-active: var(--colorTransparent);
+		}
+	}
+</style>
+
+<script>
+	const hamburger = document.querySelector('.c-hamburger');
+	const menu = document.querySelector('.mobile-nav-list');
+	const navLinks = document.querySelectorAll('.mobile-nav-list .nav-link');
+	const body = document.querySelector('body');
+
+	hamburger?.addEventListener('click', () => {
+		menu?.classList.toggle('expanded');
+		hamburger?.classList.toggle('active');
+
+		// Toggle aria-expanded
+		const isExpanded = hamburger.getAttribute('aria-expanded') === 'true';
+		hamburger.setAttribute('aria-expanded', String(!isExpanded));
+
+		if (body) {
+			body.style.overflowY =
+				body.style.overflowY === 'hidden' ? 'auto' : 'hidden';
+		}
+	});
+
+	navLinks.forEach((link) => {
+		link.addEventListener('click', () => {
+			menu?.classList.remove('expanded');
+			hamburger?.classList.remove('active');
+
+			// Set aria-expanded to false when closing
+			hamburger?.setAttribute('aria-expanded', 'false');
+
+			if (body) {
+				body.style.overflowY =
+					body.style.overflowY === 'hidden' ? 'auto' : 'hidden';
+			}
+		});
+	});
+</script>

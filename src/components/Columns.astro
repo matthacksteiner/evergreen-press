@@ -1,0 +1,46 @@
+---
+import type { ColumnsComponentProps } from '@app-types/components.types';
+import Blocks from '@components/Blocks.astro';
+
+const { columns, global, backgroundPadding, backgroundContainer, data } =
+	Astro.props as ColumnsComponentProps;
+---
+
+{
+	columns && (
+		<>
+			{columns.map((column, index) => {
+				const span = column.span;
+				const blocks = column.blocks;
+				const isFirstColumn = index === 0;
+				const isLastColumn = index === columns.length - 1;
+
+				const colClass = `column lg:col-span-${span} ${
+					isFirstColumn &&
+					(backgroundPadding === 'right' || backgroundPadding === 'none')
+						? 'lg:-ml-[var(--grid-margin-desktop)]'
+						: ''
+				}
+				${
+					isLastColumn &&
+					(backgroundPadding === 'left' || backgroundPadding === 'none')
+						? 'lg:-mr-[var(--grid-margin-desktop)]'
+						: ''
+				}
+				${blocks.length > 0 ? 'col-span-6' : 'hidden lg:block'} `;
+
+				return (
+					<section data-key={index} class={colClass}>
+						<Blocks
+							blocks={blocks}
+							global={global}
+							span={span}
+							backgroundContainer={backgroundContainer}
+							data={data}
+						/>
+					</section>
+				);
+			})}
+		</>
+	)
+}

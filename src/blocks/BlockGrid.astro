@@ -1,0 +1,16 @@
+---
+import Columns from '@blocks/BlockColumns.astro';
+import type { BlockGridComponentProps } from '@app-types/components.types';
+
+const { grid, global, span, metadata } = Astro.props as BlockGridComponentProps;
+const grids = grid.content.grid;
+const title = grid.content.title;
+---
+
+<section
+	id={metadata?.identifier || title || undefined}
+	class:list={['blockGrid', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	{grids.map((grid) => <Columns {...grid} global={global} span={span} />)}
+</section>

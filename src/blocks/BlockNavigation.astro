@@ -1,0 +1,334 @@
+---
+import { toRem } from '@lib/helpers';
+import Link from '@components/Link.astro';
+import type { BlockNavigationComponentProps } from '@app-types/components.types';
+
+const {
+	previousToggle,
+	nextToggle,
+	previousLabel,
+	nextLabel,
+	navigationAlign,
+	buttonLocal,
+	buttonSettings,
+	buttonColors,
+	metadata,
+	global,
+	data,
+} = Astro.props as BlockNavigationComponentProps;
+const pageNavigation = data?.navigation;
+// Don't render if no navigation data available
+if (!pageNavigation || (!pageNavigation.prevPage && !pageNavigation.nextPage)) {
+	return null;
+}
+
+const prevPage = pageNavigation.prevPage;
+const nextPage = pageNavigation.nextPage;
+
+// Use custom labels or fallback to defaults
+const prevLabel = previousLabel || '← Vorheriges Projekt';
+const nextLabelText = nextLabel || 'Nächstes Projekt →';
+
+// Default alignment for navigation
+const alignmentClass = navigationAlign
+	? `justify-${navigationAlign}`
+	: 'justify-between';
+
+// Button styling (use local button settings if enabled, otherwise global)
+const useLocalStyling = buttonLocal;
+const buttonFontSize = useLocalStyling
+	? buttonSettings?.buttonfontsize
+	: global.buttonFontSize;
+const buttonFont = useLocalStyling
+	? buttonSettings?.buttonfont
+	: global.buttonFont;
+const buttonPadding = useLocalStyling
+	? toRem(buttonSettings?.buttonpadding || 0)
+	: toRem(global.buttonPadding);
+const buttonBorderRadius = useLocalStyling
+	? toRem(buttonSettings?.buttonborderradius || 0)
+	: toRem(global.buttonBorderRadius);
+const buttonBorderWidth = useLocalStyling
+	? toRem(buttonSettings?.buttonborderwidth || 0)
+	: toRem(global.buttonBorderWidth);
+
+const buttonBackgroundColor = useLocalStyling
+	? buttonColors?.buttonbackgroundcolor
+	: global.buttonBackgroundColor;
+const buttonBackgroundColorActive = useLocalStyling
+	? buttonColors?.buttonbackgroundcoloractive
+	: global.buttonBackgroundColorActive;
+const buttonTextColor = useLocalStyling
+	? buttonColors?.buttontextcolor
+	: global.buttonTextColor;
+const buttonTextColorActive = useLocalStyling
+	? buttonColors?.buttontextcoloractive
+	: global.buttonTextColorActive;
+const buttonBorderColor = useLocalStyling
+	? buttonColors?.buttonbordercolor
+	: global.buttonBorderColor;
+const buttonBorderColorActive = useLocalStyling
+	? buttonColors?.buttonbordercoloractive
+	: global.buttonBorderColorActive;
+---
+
+<nav
+	id={metadata?.identifier || undefined}
+	class:list={[
+		'navigation-block',
+		'flex',
+		'gap-4',
+		alignmentClass,
+		metadata?.classes,
+	]}
+	{...metadata?.attributes || {}}
+>
+	{
+		previousToggle && prevPage && (
+			<Link
+				link={{
+					type: 'page',
+					href: prevPage.uri,
+					uri: prevPage.uri,
+					title: prevLabel,
+				}}
+				class:list={[
+					'nav-button',
+					'nav-button--prev',
+					`font--${buttonFontSize}`,
+					`buttonBg--${buttonBackgroundColor}`,
+					`buttonBgActive--${buttonBackgroundColorActive}`,
+					`buttonText--${buttonTextColor}`,
+					`buttonTextActive--${buttonTextColorActive}`,
+					`buttonBorder--${buttonBorderColor}`,
+					`buttonBorderActive--${buttonBorderColorActive}`,
+				]}
+			>
+				{prevLabel}
+			</Link>
+		)
+	}
+	{
+		nextToggle && nextPage && (
+			<Link
+				link={{
+					type: 'page',
+					href: nextPage.uri,
+					uri: nextPage.uri,
+					title: nextLabelText,
+				}}
+				class:list={[
+					'nav-button',
+					'nav-button--next',
+					`font--${buttonFontSize}`,
+					`buttonBg--${buttonBackgroundColor}`,
+					`buttonBgActive--${buttonBackgroundColorActive}`,
+					`buttonText--${buttonTextColor}`,
+					`buttonTextActive--${buttonTextColorActive}`,
+					`buttonBorder--${buttonBorderColor}`,
+					`buttonBorderActive--${buttonBorderColorActive}`,
+				]}
+			>
+				{nextLabelText}
+			</Link>
+		)
+	}
+</nav>
+
+<style
+	lang="css"
+	define:vars={{
+		buttonFont,
+		buttonPadding,
+		buttonBorderRadius,
+		buttonBorderWidth,
+	}}
+>
+	.navigation-block {
+		font-family: var(--buttonFont);
+	}
+
+	.nav-button {
+		@apply inline-flex items-center justify-center transition-all duration-200 ease-in-out;
+		padding: var(--buttonPadding) calc(var(--buttonPadding) * 2);
+		border-radius: var(--buttonBorderRadius);
+		border-width: var(--buttonBorderWidth);
+		font-family: var(--buttonFont);
+	}
+
+	.buttonText {
+		&--primary {
+			@apply text-primary;
+		}
+
+		&--secondary {
+			@apply text-secondary;
+		}
+
+		&--tertiary {
+			@apply text-tertiary;
+		}
+
+		&--black {
+			@apply text-black;
+		}
+
+		&--white {
+			@apply text-white;
+		}
+
+		&--transparent {
+			@apply text-transparent;
+		}
+	}
+
+	.buttonTextActive {
+		&--primary {
+			@apply hover:text-primary;
+		}
+
+		&--secondary {
+			@apply hover:text-secondary;
+		}
+
+		&--tertiary {
+			@apply hover:text-tertiary;
+		}
+
+		&--black {
+			@apply hover:text-black;
+		}
+
+		&--white {
+			@apply hover:text-white;
+		}
+
+		&--transparent {
+			@apply hover:text-transparent;
+		}
+	}
+
+	.buttonBg {
+		&--primary {
+			@apply bg-primary;
+		}
+
+		&--secondary {
+			@apply bg-secondary;
+		}
+
+		&--tertiary {
+			@apply bg-tertiary;
+		}
+
+		&--black {
+			@apply bg-black;
+		}
+
+		&--white {
+			@apply bg-white;
+		}
+
+		&--transparent {
+			@apply bg-transparent;
+		}
+	}
+
+	.buttonBgActive {
+		&--primary {
+			@apply hover:bg-primary;
+		}
+
+		&--secondary {
+			@apply hover:bg-secondary;
+		}
+
+		&--tertiary {
+			@apply hover:bg-tertiary;
+		}
+
+		&--black {
+			@apply hover:bg-black;
+		}
+
+		&--white {
+			@apply hover:bg-white;
+		}
+
+		&--transparent {
+			@apply hover:bg-transparent;
+		}
+	}
+
+	.buttonBorder {
+		&--primary {
+			@apply border-primary;
+		}
+
+		&--secondary {
+			@apply border-secondary;
+		}
+
+		&--tertiary {
+			@apply border-tertiary;
+		}
+
+		&--black {
+			@apply border-black;
+		}
+
+		&--white {
+			@apply border-white;
+		}
+
+		&--transparent {
+			@apply border-transparent;
+		}
+	}
+
+	.buttonBorderActive {
+		&--primary {
+			@apply hover:border-primary;
+		}
+
+		&--secondary {
+			@apply hover:border-secondary;
+		}
+
+		&--tertiary {
+			@apply hover:border-tertiary;
+		}
+
+		&--black {
+			@apply hover:border-black;
+		}
+
+		&--white {
+			@apply hover:border-white;
+		}
+
+		&--transparent {
+			@apply hover:border-transparent;
+		}
+	}
+</style>
+
+<script>
+	document.addEventListener('keydown', function (event) {
+		if (event.key === 'ArrowLeft') {
+			const prevButton = document.querySelector(
+				'.nav-button--prev'
+			) as HTMLElement;
+			if (prevButton) {
+				prevButton.click();
+			}
+		} else if (event.key === 'ArrowRight') {
+			const nextButton = document.querySelector(
+				'.nav-button--next'
+			) as HTMLElement;
+			if (nextButton) {
+				nextButton.click();
+			}
+		}
+	});
+</script>

@@ -1,0 +1,51 @@
+{
+  "extends": "astro/tsconfigs/base",
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "baseUrl": ".",
+    "types": [
+      "astro/client"
+    ],
+    "paths": {
+      "@config/*": [
+        "src/config/*"
+      ],
+      "@components/*": [
+        "src/overrides/*",
+        "src/components/*"
+      ],
+      "@blocks/*": [
+        "src/overrides/*",
+        "src/blocks/*"
+      ],
+      "@layouts/*": [
+        "src/overrides/*",
+        "src/layouts/*"
+      ],
+      "@styles/*": [
+        "src/overrides/*",
+        "src/styles/*"
+      ],
+      "@scripts/*": [
+        "src/overrides/*",
+        "src/scripts/*"
+      ],
+      "@lib/*": [
+        "src/overrides/*",
+        "src/lib/*"
+      ],
+      "@overrides/*": [
+        "src/overrides/*"
+      ],
+      "@public/*": [
+        "public/*"
+      ],
+      "@app-types": [
+        "src/types"
+      ],
+      "@app-types/*": [
+        "src/types/*"
+      ]
+    }
+  }
+}

@@ -1,0 +1,99 @@
+---
+import type { CardContentComponentProps } from '@app-types/components.types';
+import VectorImage from '@components/VectorImage.astro';
+import Level from '@components/Level.astro';
+
+const {
+	title,
+	text,
+	image,
+	hovertoggle,
+	justify,
+	Level: headingLevel,
+	titleSize,
+	titleAlign,
+	textSize,
+	textAlign,
+	widthMobile,
+	widthDesktop,
+	widthAlign,
+	titleFont,
+	textFont,
+} = Astro.props as CardContentComponentProps;
+---
+
+<div
+	class:list={[
+		'card-main-content transition-opacity duration-300 h-full flex flex-col',
+		hovertoggle && 'group-hover:opacity-0',
+		{
+			'justify-around': justify === 'space-around',
+			'justify-between': justify === 'space-between',
+			'justify-evenly': justify === 'space-evenly',
+			'justify-start': justify === 'start',
+			'justify-center': justify === 'center',
+			'justify-end': justify === 'end',
+			'justify-normal': !justify || justify === 'normal',
+		},
+	]}
+>
+	{
+		title && (
+			<Level
+				level={headingLevel}
+				class:list={[
+					'card-title',
+					`font--${titleSize}`,
+					`text--${titleAlign}`,
+					justify === 'one' && 'mb-auto',
+				]}
+				set:html={title}
+			/>
+		)
+	}
+	{
+		text && (
+			<div
+				class:list={[
+					'card-text',
+					'mt-2',
+					`font--${textSize}`,
+					`text--${textAlign}`,
+				]}
+				set:html={text}
+			/>
+		)
+	}
+	{
+		image && (
+			<div
+				class:list={['card-image', 'w-full', justify === 'two' && 'mt-auto']}
+			>
+				<VectorImage
+					image={image}
+					noLink="true"
+					widthMobile={widthMobile}
+					widthDesktop={widthDesktop}
+					widthAlign={widthAlign}
+				/>
+			</div>
+		)
+	}
+</div>
+
+<style lang="css" define:vars={{ titleFont, textFont }}>
+	.card-main-content {
+		/* safari workaround */
+		height: -webkit-fill-available;
+	}
+
+	.card-title {
+		@apply hyphens-auto;
+		font-family: var(--titleFont);
+	}
+
+	.card-text {
+		@apply hyphens-auto;
+		font-family: var(--textFont);
+	}
+</style>

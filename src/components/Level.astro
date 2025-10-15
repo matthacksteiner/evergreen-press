@@ -1,0 +1,20 @@
+---
+export interface Props {
+	level?: string;
+	class?: string;
+	[key: string]: any;
+}
+
+const { level = 'h2', class: className, ...rest } = Astro.props as Props;
+
+// Normalize the level prop to ensure it's a valid heading tag
+const validLevels = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+const normalizedLevel = validLevels.includes(level) ? level : 'h2';
+
+// Create the HTML tag
+const Tag = normalizedLevel as keyof HTMLElementTagNameMap;
+---
+
+<Tag class={className} {...rest}>
+	<slot />
+</Tag>

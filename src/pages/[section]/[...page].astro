@@ -1,0 +1,40 @@
+---
+import { getSections, getSection, getGlobal } from '@lib/api';
+import PageRenderer from '@components/PageRenderer.astro';
+
+export async function getStaticPaths({ paginate }) {
+	// Get all section data directly
+	const sections = await getSections();
+
+	// Create array to store all paginated paths with type assertion
+	const allPaginatedPaths: any[] = [];
+
+	// Process each section one by one
+	for (const section of sections) {
+		// Get detailed data for this section including items
+		const sectionData = await getSection(section.uri);
+		const global = await getGlobal();
+
+		// Configure pagination
+		const pageSize = global.paginationElements || 6;
+
+		// Create pagination for this section's items
+		const paginatedData = paginate(sectionData.items || [], {
+			params: { section: section.uri },
+			pageSize,
+			props: { sectionData },
+		});
+
+		// Add to collection (spreading the array instead of pushing items individually)
+		allPaginatedPaths.push(...paginatedData);
+	}
+
+	return allPaginatedPaths;
+}
+
+// Access props from pagination
+const { page, sectionData } = Astro.props;
+const { section } = Astro.params;
+---
+
+<PageRenderer slug={section} page={page} data={sectionData} />

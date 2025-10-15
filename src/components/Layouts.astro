@@ -1,0 +1,304 @@
+---
+import type { LayoutsComponentProps } from '@app-types/components.types';
+import Columns from '@components/Columns.astro';
+import ScrollButton from '@components/ScrollButton.astro';
+const {
+	global,
+	layouts,
+	class: className,
+	data,
+} = Astro.props as LayoutsComponentProps;
+---
+
+{
+	layouts &&
+		layouts.map((layout) => {
+			const columns = layout.content.columns;
+			const anchor = layout.anchor;
+			const classes = layout.classes;
+			const attributes = layout.attributes;
+			const backgroundColor = layout.backgroundColor || 'transparent';
+			const backgroundPadding = layout.backgroundPadding || 'both';
+			const backgroundContainer = layout.backgroundContainer;
+			const backgroundContainerColor =
+				layout.backgroundContainerColor || 'transparent';
+			const backgroundHeight = layout.backgroundHeight;
+			const backgroundAlignVertical = layout.backgroundAlignVertical;
+			const backgroundAlignHorizontal = layout.backgroundAlignHorizontal;
+			const backgroundAlignItemsVertical = layout.backgroundAlignItemsVertical;
+			const backgroundArrow = layout.backgroundArrow;
+			const backgroundArrowColor = layout.backgroundArrowColor;
+			const backgroundArrowSize = layout.backgroundArrowSize;
+			const spacingMobileTop = layout.spacingMobileTop;
+			const spacingMobileBottom = layout.spacingMobileBottom;
+			const spacingDesktopTop = layout.spacingDesktopTop;
+			const spacingDesktopBottom = layout.spacingDesktopBottom;
+			const sectionProps = anchor ? { id: anchor } : {};
+
+			return (
+				<section
+					{...sectionProps}
+					class:list={[
+						className,
+						'columns',
+						`bg--${backgroundColor}`,
+						`align-vert--${backgroundAlignVertical}`,
+						`align-hor--${backgroundAlignHorizontal}`,
+						backgroundHeight === 'full'
+							? 'flex min-h-screen'
+							: backgroundHeight === 'half'
+								? 'h-screenHalf flex'
+								: 'auto',
+						classes,
+					]}
+					{...(attributes ?? {})}
+				>
+					<div
+						class:list={[
+							'grid-default',
+							`bg--${backgroundContainerColor}`,
+							backgroundContainer,
+							`spacingMobileTop--${spacingMobileTop}`,
+							`spacingMobileBottom--${spacingMobileBottom}`,
+							`spacingDesktopTop--${spacingDesktopTop}`,
+							`spacingDesktopBottom--${spacingDesktopBottom}`,
+							`align-vert--${backgroundAlignItemsVertical}`,
+						]}
+					>
+						<Columns
+							columns={columns}
+							global={global}
+							backgroundPadding={backgroundPadding}
+							backgroundContainer={backgroundContainer}
+							data={data}
+						/>
+					</div>
+					<ScrollButton
+						controls={backgroundArrow}
+						color={backgroundArrowColor}
+						size={backgroundArrowSize}
+					/>
+				</section>
+			);
+		})
+}
+<style class="css">
+	.container-mobile {
+		@apply max-lg:pl-[var(--grid-margin-mobile)] max-lg:pr-[var(--grid-margin-mobile)];
+	}
+
+	.spacingMobileTop {
+		&--0 {
+			@apply pt-0;
+		}
+		&--8 {
+			@apply pt-2;
+		}
+		&--16 {
+			@apply pt-4;
+		}
+		&--24 {
+			@apply pt-6;
+		}
+		&--32 {
+			@apply pt-8;
+		}
+		&--40 {
+			@apply pt-10;
+		}
+		&--48 {
+			@apply pt-12;
+		}
+		&--56 {
+			@apply pt-14;
+		}
+		&--64 {
+			@apply pt-16;
+		}
+		&--80 {
+			@apply pt-20;
+		}
+		&--96 {
+			@apply pt-24;
+		}
+		&--128 {
+			@apply pt-32;
+		}
+		&--160 {
+			@apply pt-40;
+		}
+		&--192 {
+			@apply pt-48;
+		}
+		&--256 {
+			@apply pt-64;
+		}
+	}
+
+	.spacingMobileBottom {
+		&--0 {
+			@apply pb-0;
+		}
+		&--8 {
+			@apply pb-2;
+		}
+		&--16 {
+			@apply pb-4;
+		}
+		&--24 {
+			@apply pb-6;
+		}
+		&--32 {
+			@apply pb-8;
+		}
+		&--40 {
+			@apply pb-10;
+		}
+		&--48 {
+			@apply pb-12;
+		}
+		&--56 {
+			@apply pb-14;
+		}
+		&--64 {
+			@apply pb-16;
+		}
+		&--80 {
+			@apply pb-20;
+		}
+		&--96 {
+			@apply pb-24;
+		}
+		&--128 {
+			@apply pb-32;
+		}
+		&--160 {
+			@apply pb-40;
+		}
+		&--192 {
+			@apply pb-48;
+		}
+		&--256 {
+			@apply pb-64;
+		}
+	}
+
+	.spacingDesktopTop {
+		&--0 {
+			@apply lg:pt-0;
+		}
+		&--8 {
+			@apply lg:pt-2;
+		}
+		&--16 {
+			@apply lg:pt-4;
+		}
+		&--24 {
+			@apply lg:pt-6;
+		}
+		&--32 {
+			@apply lg:pt-8;
+		}
+		&--40 {
+			@apply lg:pt-10;
+		}
+		&--48 {
+			@apply lg:pt-12;
+		}
+		&--56 {
+			@apply lg:pt-14;
+		}
+		&--64 {
+			@apply lg:pt-16;
+		}
+		&--80 {
+			@apply lg:pt-20;
+		}
+		&--96 {
+			@apply lg:pt-24;
+		}
+		&--128 {
+			@apply lg:pt-32;
+		}
+		&--160 {
+			@apply lg:pt-40;
+		}
+		&--192 {
+			@apply lg:pt-48;
+		}
+		&--256 {
+			@apply lg:pt-64;
+		}
+	}
+
+	.spacingDesktopBottom {
+		&--0 {
+			@apply lg:pb-0;
+		}
+		&--8 {
+			@apply lg:pb-2;
+		}
+		&--16 {
+			@apply lg:pb-4;
+		}
+		&--24 {
+			@apply lg:pb-6;
+		}
+		&--32 {
+			@apply lg:pb-8;
+		}
+		&--40 {
+			@apply lg:pb-10;
+		}
+		&--48 {
+			@apply lg:pb-12;
+		}
+		&--56 {
+			@apply lg:pb-14;
+		}
+		&--64 {
+			@apply lg:pb-16;
+		}
+		&--80 {
+			@apply lg:pb-20;
+		}
+		&--96 {
+			@apply lg:pb-24;
+		}
+		&--128 {
+			@apply lg:pb-32;
+		}
+		&--160 {
+			@apply lg:pb-40;
+		}
+		&--192 {
+			@apply lg:pb-48;
+		}
+		&--256 {
+			@apply lg:pb-64;
+		}
+	}
+</style>
+
+<script>
+	const arrowButton = document.querySelector('.arrow');
+	const header = document.querySelector('header');
+
+	if (arrowButton) {
+		arrowButton.addEventListener('click', () => {
+			const currentColumns = arrowButton.closest('.columns');
+			const nextColumns = currentColumns?.nextElementSibling as HTMLElement;
+			let distanceToScroll: number;
+			if (nextColumns && nextColumns.classList.contains('columns')) {
+				const headerHeight = header?.offsetHeight || 0;
+				distanceToScroll = nextColumns.offsetTop - headerHeight;
+			} else {
+				distanceToScroll = nextColumns?.offsetTop || 0;
+			}
+			window.scrollTo({
+				top: distanceToScroll,
+				behavior: 'smooth',
+			});
+		});
+	}
+</script>

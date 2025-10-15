@@ -1,0 +1,293 @@
+---
+import ImageComponent from '@components/ImageComponent.astro';
+import VectorImage from '@components/VectorImage.astro';
+import type { BlockSliderComponentProps } from '@app-types/components.types';
+import Level from '@components/Level.astro';
+
+const {
+	global,
+	images,
+	controls,
+	color,
+	time,
+	effect,
+	direction,
+	viewMobile,
+	viewDesktop,
+	viewPaddingMobile,
+	viewPaddingDesktop,
+	text,
+	font,
+	size,
+	align,
+	textcolor,
+	Level: headingLevel,
+	toggle,
+	ratioMobile,
+	ratioDesktop,
+	span,
+	backgroundContainer,
+	metadata,
+	aboveFold,
+} = Astro.props as BlockSliderComponentProps;
+const hasControl = (control: string) => controls && controls.includes(control);
+const arrows = hasControl('arrows');
+const dots = hasControl('dots');
+const line = hasControl('line');
+const ticker = hasControl('ticker');
+const full = hasControl('full') ? 'h-screen' : null;
+const overlay = toggle && hasControl('overlay') ? 'overlay' : null;
+
+// Determine loading strategy based on aboveFold
+const loadingStrategy = aboveFold ? undefined : 'lazy';
+---
+
+<section
+	id={metadata?.identifier || undefined}
+	class:list={[
+		'blockSlider',
+		'blocks',
+		metadata?.classes,
+		ticker ? 'ticker-mode' : '',
+	]}
+	{...metadata?.attributes}
+	data-controls={controls}
+	data-time={time}
+	data-effect={effect}
+	data-direction={direction}
+	data-viewmobile={viewMobile}
+	data-viewdesktop={viewDesktop}
+	data-viewpaddingmobile={viewPaddingMobile}
+	data-viewpaddingdesktop={viewPaddingDesktop}
+>
+	<div class="swiper swiperSlider">
+		<div class="swiper-wrapper items-center">
+			{
+				images?.map((image, index) => (
+					<div class:list={['swiper-slide', overlay]}>
+						{image.url?.endsWith('.svg') ? (
+							<VectorImage
+								image={image}
+								widthMobile="100"
+								widthDesktop="100"
+								widthAlign="center"
+							/>
+						) : (
+							<ImageComponent
+								global={global}
+								image={image}
+								loading={loadingStrategy}
+								class:list={[full]}
+								ratioMobile={ratioMobile}
+								ratioDesktop={ratioDesktop}
+								span={span}
+								backgroundContainer={backgroundContainer}
+								aboveFold={aboveFold}
+								isFirstSlide={index === 0}
+							/>
+						)}
+					</div>
+				))
+			}
+		</div>
+		{
+			arrows && !ticker && (
+				<nav>
+					<div class:list={[`text--${color}`, 'swiper-button-next']} />
+					<div class:list={[`text--${color}`, 'swiper-button-prev']} />
+				</nav>
+			)
+		}
+		{
+			(dots || line) && !ticker && (
+				<div
+					class:list={['swiper-pagination', `swiper-pagination--${color}`]}
+				/>
+			)
+		}
+		<div
+			class="slide-content absolute left-2/4 top-2/4 z-[1] w-4/5 max-w-[75%] -translate-x-2/4 -translate-y-2/4"
+		>
+			{
+				toggle && (
+					<div>
+						<Level
+							level={headingLevel}
+							set:html={text}
+							class:list={[
+								`title`,
+								`font--${size}`,
+								`text--${textcolor}`,
+								`text--${align}`,
+							]}
+						/>
+					</div>
+				)
+			}
+		</div>
+	</div>
+</section>
+
+<script>
+	import Swiper, { Navigation, Autoplay, Pagination, EffectFade } from 'swiper';
+	import 'swiper/css/bundle';
+	import 'swiper/css/effect-fade';
+	Swiper.use([Navigation, Autoplay, Pagination, EffectFade]);
+
+	const blockSliders = document.querySelectorAll('.blockSlider');
+
+	blockSliders.forEach((blockSlider) => {
+		if (blockSlider instanceof HTMLElement) {
+			const controls = blockSlider?.dataset.controls;
+			const line = controls?.includes('line');
+			const time = blockSlider?.dataset.time;
+			const autoplay = controls?.includes('autoplay');
+			const ticker = controls?.includes('ticker');
+			const effect = blockSlider?.dataset.effect;
+			const viewMobile = blockSlider?.dataset.viewmobile
+				? blockSlider.dataset.viewmobile
+				: '1';
+			const viewDesktop = blockSlider?.dataset.viewdesktop
+				? blockSlider.dataset.viewdesktop
+				: '1';
+			const viewPaddingMobile = blockSlider?.dataset.viewpaddingmobile
+				? blockSlider.dataset.viewpaddingmobile
+				: '0';
+			const viewPaddingDesktop = blockSlider?.dataset.viewpaddingdesktop
+				? blockSlider.dataset.viewpaddingdesktop
+				: '0';
+			if (time) {
+				const swiperSlider = blockSlider.querySelector('.swiperSlider');
+				const direction =
+					blockSlider?.dataset.direction !== 'ltr' ? 'rtl' : 'ltr';
+				swiperSlider?.setAttribute('dir', direction);
+
+				// Configure Swiper options
+				const swiperOptions: Swiper.SwiperOptions = {
+					centeredSlidesBounds: !ticker,
+					slidesPerView: parseFloat(viewMobile),
+					spaceBetween: parseInt(viewPaddingMobile),
+					effect: effect === 'fade' ? 'fade' : 'slide',
+					navigation: {
+						nextEl: blockSlider.querySelector(
+							'.swiper-button-next'
+						) as HTMLElement,
+						prevEl: blockSlider.querySelector(
+							'.swiper-button-prev'
+						) as HTMLElement,
+					},
+					pagination: {
+						el: blockSlider.querySelector('.swiper-pagination') as HTMLElement,
+						type: line ? 'progressbar' : 'bullets',
+						clickable: true,
+					},
+					breakpoints: {
+						1024: {
+							slidesPerView: parseFloat(viewDesktop),
+							spaceBetween: parseInt(viewPaddingDesktop),
+						},
+					},
+				};
+
+				// Configure ticker mode
+				if (ticker) {
+					swiperOptions.loop = true;
+					swiperOptions.speed = parseInt(time);
+					swiperOptions.autoplay = {
+						delay: 0,
+						disableOnInteraction: false,
+					};
+					swiperOptions.allowTouchMove = false;
+					swiperOptions.loopAdditionalSlides = 10;
+				} else if (autoplay) {
+					swiperOptions.autoplay = {
+						delay: parseInt(time),
+					};
+				}
+
+				new Swiper(swiperSlider as HTMLElement, swiperOptions);
+			}
+		}
+	});
+</script>
+
+<style
+	lang="css"
+	is:global
+	define:vars={{
+		font,
+	}}
+>
+	.title {
+		font-family: var(--font);
+	}
+	.overlay {
+		&:before {
+			@apply absolute left-0 top-0 z-10 h-full w-full bg-[rgba(_0,0,0,0.25_)] content-[''];
+		}
+	}
+
+	/* Ticker mode styles */
+	.ticker-mode .swiperSlider {
+		overflow: hidden;
+	}
+
+	.ticker-mode .swiper-wrapper {
+		transition-timing-function: linear !important;
+	}
+
+	/* Swiper Navigation Colors */
+	.text--primary {
+		--swiper-navigation-color: var(--color-primary);
+	}
+	.text--secondary {
+		--swiper-navigation-color: var(--color-secondary);
+	}
+	.text--tertiary {
+		--swiper-navigation-color: var(--color-tertiary);
+	}
+	.text--black {
+		--swiper-navigation-color: #000000;
+	}
+	.text--white {
+		--swiper-navigation-color: #ffffff;
+	}
+	.text--transparent {
+		--swiper-navigation-color: transparent;
+	}
+
+	/* Swiper Pagination Colors */
+	.swiper-pagination--primary {
+		--swiper-pagination-color: var(--color-primary);
+		--swiper-pagination-bullet-inactive-color: rgba(
+			var(--color-primary-rgb),
+			0.3
+		);
+	}
+	.swiper-pagination--secondary {
+		--swiper-pagination-color: var(--color-secondary);
+		--swiper-pagination-bullet-inactive-color: rgba(
+			var(--color-secondary-rgb),
+			0.3
+		);
+	}
+	.swiper-pagination--tertiary {
+		--swiper-pagination-color: var(--color-tertiary);
+		--swiper-pagination-bullet-inactive-color: rgba(
+			var(--color-tertiary-rgb),
+			0.3
+		);
+	}
+	.swiper-pagination--black {
+		--swiper-pagination-color: #000000;
+		--swiper-pagination-bullet-inactive-color: rgba(0, 0, 0, 0.3);
+	}
+	.swiper-pagination--white {
+		--swiper-pagination-color: #ffffff;
+		--swiper-pagination-bullet-inactive-color: rgba(255, 255, 255, 0.3);
+	}
+	.swiper-pagination--transparent {
+		--swiper-pagination-color: transparent;
+		--swiper-pagination-bullet-inactive-color: rgba(0, 0, 0, 0.1);
+	}
+</style>

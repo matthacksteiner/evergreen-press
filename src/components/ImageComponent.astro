@@ -1,0 +1,138 @@
+---
+import type { ImageComponentComponentProps } from '@app-types/components.types';
+import { toRem } from '@lib/helpers';
+import Picture from '@components/Picture.astro';
+import ImageCaption from '@components/ImageCaption.astro';
+import ImageCopyright from './ImageCopyright.astro';
+import Link from '@components/Link.astro';
+
+const {
+	global,
+	image,
+	ratioDesktop,
+	ratioMobile,
+	loading,
+	span,
+	backgroundContainer,
+	lightbox,
+	aboveFold,
+	isFirstSlide,
+} = Astro.props as ImageComponentComponentProps;
+
+// Picture component props (type-safe)
+const pictureProps = {
+	src: image.url,
+	urlFocus: image.urlFocus,
+	urlFocusMobile: image.urlFocusMobile,
+	width: image.width,
+	height: image.height,
+	alt: image.alt,
+	name: image.name,
+	id: image.identifier,
+	ratioMobile: ratioMobile || 'original',
+	ratioDesktop: ratioDesktop || 'original',
+	backgroundContainer: (backgroundContainer ? 'full' : 'container') as
+		| 'container'
+		| 'full',
+	loading: loading as 'lazy' | 'eager' | undefined,
+	span: String(span || 6),
+	gridGapMobile: global.gridGapMobile || 0,
+	gridMarginMobile: global.gridMarginMobile || 0,
+	gridGapDesktop: global.gridGapDesktop || 0,
+	gridMarginDesktop: global.gridMarginDesktop || 0,
+	class: image.classes
+		? `${image.classes} w-full object-cover`
+		: 'w-full object-cover',
+	thumbhash: image.thumbhash,
+	aboveFold: aboveFold,
+	isFirstSlide: isFirstSlide,
+};
+const gridBlockMobile = toRem(global.gridBlockMobile) || '1rem';
+const gridBlockDesktop = toRem(global.gridBlockDesktop) || '1rem';
+const link = image.linkexternal;
+// Block-level lightbox setting takes priority over file-level settings
+const shouldApplyZoom =
+	lightbox !== undefined
+		? lightbox && !image.linktoggle // Use block-level setting if explicitly set
+		: image.lightbox && !image.linktoggle; // Fall back to file-level setting
+
+// Dynamic overlay settings from image data
+const captionoverlay = image.captionoverlay;
+const showOverlay = captionoverlay && captionoverlay.includes('overlay');
+
+const overlayOpacity = (image.captionOverlayRange || 50) / 100;
+const overlayColor = image.captionColor || '#000000';
+---
+
+{
+	image.linktoggle && link && link.type ? (
+		<Link link={link} aria-label={`Mehr zu ${image.alt}`}>
+			<div class:list={['relative', showOverlay && 'overlay']}>
+				<Picture {...pictureProps} />
+				{image.captiontoggle ? (
+					<ImageCaption {...image} global={global} />
+				) : null}
+				{image.copyrighttoggle ? <ImageCopyright {...image} /> : null}
+			</div>
+		</Link>
+	) : (
+		<div class:list={['relative', showOverlay && 'overlay']}>
+			<Picture
+				{...pictureProps}
+				dataZoomable={shouldApplyZoom ? true : undefined}
+			/>
+			{image.captiontoggle ? <ImageCaption {...image} global={global} /> : null}
+			{image.copyrighttoggle ? <ImageCopyright {...image} /> : null}
+		</div>
+	)
+}
+
+<style
+	lang="css"
+	define:vars={{
+		gridBlockMobile,
+		gridBlockDesktop,
+		overlayOpacity,
+		overlayColor,
+	}}
+>
+	.text-content {
+		@apply mt-[var(--gridBlockMobile)] lg:mt-[var(--gridBlockDesktop)];
+	}
+
+	.overlay:before {
+		@apply absolute left-0 top-0 z-10 h-full w-full transition-opacity duration-300 content-[''];
+		background-color: color-mix(
+			in srgb,
+			var(--overlayColor) calc(var(--overlayOpacity) * 100%),
+			transparent
+		);
+	}
+
+	.overlay:hover:before {
+		@apply opacity-0;
+	}
+
+	:global(.medium-zoom-overlay),
+	:global(.medium-zoom-image--opened) {
+		@apply z-50;
+	}
+</style>
+
+<script>
+	import mediumZoom from 'medium-zoom';
+
+	// Initialize lightbox only once globally to avoid conflicts
+	document.addEventListener('DOMContentLoaded', () => {
+		// Check if lightbox is already initialized to prevent double initialization
+		if (!document.body.hasAttribute('data-medium-zoom-initialized')) {
+			document.body.setAttribute('data-medium-zoom-initialized', 'true');
+
+			mediumZoom('[data-zoomable]', {
+				margin: 24,
+				background: 'rgba(0, 0, 0, 0.8)',
+				scrollOffset: 40,
+			});
+		}
+	});
+</script>

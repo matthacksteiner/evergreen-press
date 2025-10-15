@@ -1,0 +1,696 @@
+---
+import { toRem } from '@lib/helpers';
+import type { BlockContactFormComponentProps } from '@app-types/components.types';
+
+const {
+	formName = 'kontakt',
+	emailSubject = 'Neue Nachricht von der Website',
+	successPage,
+	spamProtection = 'captcha',
+	fields = {},
+	fieldSpacing = 'medium',
+	formWidth = 'full',
+	formAlign = 'left',
+	formBorderRadius = 0,
+	textGroup = {},
+	buttonLocal = false,
+	buttonSettings = {},
+	buttonColors = {},
+	buttonAlign = 'start',
+	global,
+	metadata,
+} = Astro.props as BlockContactFormComponentProps;
+
+// Generate unique ID for this form instance
+const formId =
+	metadata?.identifier || `form-${Math.random().toString(36).slice(2, 11)}`;
+
+// Ensure unique form name for Netlify Forms when multiple forms exist
+const uniqueFormName = metadata?.identifier
+	? `${formName}-${metadata.identifier}`
+	: formName;
+
+// Extract field configurations with defaults
+const firstnameConfig = fields.firstname || {};
+const lastnameConfig = fields.lastname || {};
+const emailConfig = fields.email || {};
+const messageConfig = fields.message || {};
+const submitButtonConfig = fields.submitButton || {};
+const successMessageConfig = fields.successMessage || {};
+const errorMessageConfig = fields.errorMessage || {};
+
+// Ensure at least placeholder exists for field detection
+if (!firstnameConfig.label && !firstnameConfig.placeholder) {
+	firstnameConfig.placeholder = 'First Name';
+}
+if (!lastnameConfig.label && !lastnameConfig.placeholder) {
+	lastnameConfig.placeholder = 'Last Name';
+}
+if (!emailConfig.label && !emailConfig.placeholder) {
+	emailConfig.placeholder = 'Email';
+}
+if (!messageConfig.label && !messageConfig.placeholder) {
+	messageConfig.placeholder = 'Your message';
+}
+
+// Calculate styling variables
+const textFont = textGroup?.textfont || global.textFont;
+const textColor = textGroup?.textcolor || global.textColor;
+const textSize = textGroup?.textsize || global.textSize;
+const formInputBorderRadius = toRem(formBorderRadius);
+const buttonFont =
+	buttonLocal && buttonSettings ? buttonSettings.buttonfont : global.buttonFont;
+const buttonFontSize =
+	buttonLocal && buttonSettings
+		? buttonSettings.buttonfontsize
+		: global.buttonFontSize;
+const buttonPadding =
+	buttonLocal && buttonSettings
+		? toRem(buttonSettings.buttonpadding || 0)
+		: toRem(global.buttonPadding);
+const buttonBorderRadius =
+	buttonLocal && buttonSettings
+		? toRem(buttonSettings.buttonborderradius || 0)
+		: toRem(global.buttonBorderRadius);
+const buttonBorderWidth =
+	buttonLocal && buttonSettings
+		? toRem(buttonSettings.buttonborderwidth || 0)
+		: toRem(global.buttonBorderWidth);
+
+const buttonTextColor =
+	buttonLocal && buttonColors
+		? buttonColors.buttontextcolor
+		: global.buttonTextColor;
+const buttonTextColorActive =
+	buttonLocal && buttonColors
+		? buttonColors.buttontextcoloractive
+		: global.buttonTextColorActive;
+const buttonBackgroundColor =
+	buttonLocal && buttonColors
+		? buttonColors.buttonbackgroundcolor
+		: global.buttonBackgroundColor;
+const buttonBackgroundColorActive =
+	buttonLocal && buttonColors
+		? buttonColors.buttonbackgroundcoloractive
+		: global.buttonBackgroundColorActive;
+const buttonBorderColor =
+	buttonLocal && buttonColors
+		? buttonColors.buttonbordercolor
+		: global.buttonBorderColor;
+const buttonBorderColorActive =
+	buttonLocal && buttonColors
+		? buttonColors.buttonbordercoloractive
+		: global.buttonBorderColorActive;
+
+// Form styling classes
+const spacingClass = {
+	small: 'space-y-3',
+	medium: 'space-y-6',
+	large: 'space-y-8',
+}[fieldSpacing];
+
+const widthClass = {
+	full: 'w-full',
+	large: 'w-full max-w-3xl',
+	medium: 'w-full max-w-xl',
+	small: 'w-full max-w-sm',
+}[formWidth];
+
+const alignClass = {
+	left: 'mx-0',
+	center: 'mx-auto',
+	right: 'ml-auto',
+}[formAlign];
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blockContactForm', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	<form
+		name={uniqueFormName}
+		method="POST"
+		data-netlify="true"
+		data-netlify-honeypot={spamProtection === 'honeypot'
+			? 'bot-field'
+			: undefined}
+		data-netlify-recaptcha={spamProtection === 'captcha' ? 'true' : undefined}
+		action={successPage?.href || successPage?.uri || '/'}
+		class:list={[
+			'contact-form',
+			widthClass,
+			alignClass,
+			spacingClass,
+			`font--${textSize}`,
+			`text--${textColor}`,
+		]}
+		data-success-inline={!(successPage?.href || successPage?.uri)}
+		data-subject={emailSubject}
+	>
+		<!-- Hidden fields for Netlify -->
+		<input type="hidden" name="form-name" value={uniqueFormName} />
+		<input type="hidden" name="subject" value={emailSubject} />
+
+		<!-- Honeypot field (hidden) -->
+		{
+			spamProtection === 'honeypot' && (
+				<div class="hidden">
+					<label>
+						Don't fill this out if you're human:
+						<input name="bot-field" />
+					</label>
+				</div>
+			)
+		}
+
+		<!-- Form fields container -->
+		<div class:list={[spacingClass]}>
+			<!-- Name fields container -->
+			{
+				(() => {
+					const firstnameActive =
+						firstnameConfig.label || firstnameConfig.placeholder;
+					const lastnameActive =
+						lastnameConfig.label || lastnameConfig.placeholder;
+					const bothActive = firstnameActive && lastnameActive;
+
+					if (bothActive) {
+						const gapClass =
+							fieldSpacing === 'small'
+								? 'gap-3'
+								: fieldSpacing === 'medium'
+									? 'gap-6'
+									: 'gap-8';
+						return (
+							<div class:list={['flex', gapClass]}>
+								<div class="form-field flex-1">
+									<label
+										for={`${formId}-firstname`}
+										class:list={[
+											'form-label',
+											!firstnameConfig.label && 'sr-only',
+										]}
+									>
+										{firstnameConfig.label || 'First Name'}
+									</label>
+									<input
+										type="text"
+										id={`${formId}-firstname`}
+										name="firstname"
+										placeholder={firstnameConfig.placeholder}
+										class="form-input"
+										required={firstnameConfig.required}
+									/>
+									{firstnameConfig.help && (
+										<p class="form-help">{firstnameConfig.help}</p>
+									)}
+								</div>
+								<div class="form-field flex-1">
+									<label
+										for={`${formId}-lastname`}
+										class:list={[
+											'form-label',
+											!lastnameConfig.label && 'sr-only',
+										]}
+									>
+										{lastnameConfig.label || 'Last Name'}
+									</label>
+									<input
+										type="text"
+										id={`${formId}-lastname`}
+										name="lastname"
+										placeholder={lastnameConfig.placeholder}
+										class="form-input"
+										required={lastnameConfig.required}
+									/>
+									{lastnameConfig.help && (
+										<p class="form-help">{lastnameConfig.help}</p>
+									)}
+								</div>
+							</div>
+						);
+					} else if (firstnameActive) {
+						return (
+							<div class="form-field">
+								<label
+									for={`${formId}-firstname`}
+									class:list={[
+										'form-label',
+										!firstnameConfig.label && 'sr-only',
+									]}
+								>
+									{firstnameConfig.label || 'First Name'}
+								</label>
+								<input
+									type="text"
+									id={`${formId}-firstname`}
+									name="firstname"
+									placeholder={firstnameConfig.placeholder}
+									class="form-input"
+									required={firstnameConfig.required}
+								/>
+								{firstnameConfig.help && (
+									<p class="form-help">{firstnameConfig.help}</p>
+								)}
+							</div>
+						);
+					} else if (lastnameActive) {
+						return (
+							<div class="form-field">
+								<label
+									for={`${formId}-lastname`}
+									class:list={[
+										'form-label',
+										!lastnameConfig.label && 'sr-only',
+									]}
+								>
+									{lastnameConfig.label || 'Last Name'}
+								</label>
+								<input
+									type="text"
+									id={`${formId}-lastname`}
+									name="lastname"
+									placeholder={lastnameConfig.placeholder}
+									class="form-input"
+									required={lastnameConfig.required}
+								/>
+								{lastnameConfig.help && (
+									<p class="form-help">{lastnameConfig.help}</p>
+								)}
+							</div>
+						);
+					}
+					return null;
+				})()
+			}
+
+			<!-- Email field -->
+			<div class="form-field">
+				<label
+					for={`${formId}-email`}
+					class:list={['form-label', !emailConfig.label && 'sr-only']}
+				>
+					{emailConfig.label || 'Email'}
+				</label>
+				<input
+					type="email"
+					id={`${formId}-email`}
+					name="email"
+					placeholder={emailConfig.placeholder || 'E-Mail'}
+					class="form-input"
+					required
+				/>
+				{emailConfig.help && <p class="form-help">{emailConfig.help}</p>}
+			</div>
+			<!-- Message field -->
+			<div class="form-field">
+				<label
+					for={`${formId}-message`}
+					class:list={['form-label', !messageConfig.label && 'sr-only']}
+				>
+					{messageConfig.label || 'Message'}
+				</label>
+				<textarea
+					id={`${formId}-message`}
+					name="message"
+					placeholder={messageConfig.placeholder}
+					rows={messageConfig.rows || 5}
+					class="form-input form-textarea"
+					required={messageConfig.required}></textarea>
+				{messageConfig.help && <p class="form-help">{messageConfig.help}</p>}
+			</div>
+
+			<!-- reCAPTCHA -->
+			{
+				spamProtection === 'captcha' && (
+					<div class="form-field">
+						<div data-netlify-recaptcha />
+					</div>
+				)
+			}
+
+			<!-- Submit button -->
+			<div
+				class:list={[
+					'form-submit',
+					buttonAlign === 'start'
+						? 'text-left'
+						: buttonAlign === 'center'
+							? 'text-center'
+							: buttonAlign === 'end' && 'text-right',
+				]}
+			>
+				<button
+					type="submit"
+					class:list={[
+						'form-button',
+						`font--${buttonFontSize}`,
+						`buttonText--${buttonTextColor}`,
+						`buttonTextActive--${buttonTextColorActive}`,
+						`buttonBg--${buttonBackgroundColor}`,
+						`buttonBgActive--${buttonBackgroundColorActive}`,
+						`buttonBorder--${buttonBorderColor}`,
+						`buttonBorderActive--${buttonBorderColorActive}`,
+						'transition-all',
+						'duration-300',
+					]}
+				>
+					{submitButtonConfig.placeholder || 'Nachricht senden'}
+				</button>
+			</div>
+
+			<!-- Inline feedback container (hidden by default) -->
+			<div class="form-feedback hidden" id={`${formId}-feedback`}>
+				<div class="feedback-success hidden">
+					<p>
+						✓ {
+							successMessageConfig.text ||
+								'Vielen Dank! Ihre Nachricht wurde erfolgreich versendet.'
+						}
+					</p>
+				</div>
+				<div class="feedback-error hidden">
+					<p>
+						✗ {
+							errorMessageConfig.text ||
+								'Es gab einen Fehler beim Versenden Ihrer Nachricht. Bitte versuchen Sie es erneut.'
+						}
+					</p>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+
+<style
+	lang="css"
+	is:global
+	define:vars={{
+		textFont,
+		formInputBorderRadius,
+		buttonFont,
+		buttonPadding,
+		buttonBorderRadius,
+		buttonBorderWidth,
+	}}
+>
+	.blockContactForm {
+		font-family: var(--textFont);
+	}
+
+	.contact-form {
+		@apply w-full;
+	}
+
+	.form-field {
+		@apply flex flex-col;
+	}
+
+	.form-label {
+		@apply mb-2 block font-medium;
+	}
+
+	/* When label has sr-only, remove the margin since it's hidden */
+	.form-label.sr-only {
+		@apply mb-0;
+	}
+
+	.form-input {
+		@apply w-full border border-gray-300 px-4 py-3 outline-none transition-colors duration-200 focus:border-primary focus:ring-2 focus:ring-primary;
+		border-radius: var(--formInputBorderRadius);
+	}
+
+	.form-textarea {
+		@apply min-h-[120px] resize-y;
+	}
+
+	.form-help {
+		@apply mt-1 text-sm text-gray-600;
+	}
+
+	.form-button {
+		@apply cursor-pointer rounded-[var(--buttonBorderRadius)] border-[length:var(--buttonBorderWidth)];
+		padding: var(--buttonPadding) calc(var(--buttonPadding) * 2);
+		font-family: var(--buttonFont);
+	}
+
+	.form-button:disabled {
+		@apply cursor-not-allowed opacity-50;
+	}
+
+	.form-feedback {
+		@apply mt-6;
+	}
+
+	.feedback-success {
+		@apply relative overflow-hidden rounded-lg border-l-4 border-green-500 bg-green-50 p-4 shadow-sm;
+		@apply transition-all duration-300 ease-in-out;
+	}
+
+	.feedback-success::before {
+		content: '';
+		@apply absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent;
+	}
+
+	.feedback-success p {
+		@apply relative z-10 m-0 flex items-center gap-3 font-medium text-green-800;
+		@apply text-sm leading-relaxed;
+	}
+
+	.feedback-error {
+		@apply relative overflow-hidden rounded-lg border-l-4 border-red-500 bg-red-50 p-4 shadow-sm;
+		@apply transition-all duration-300 ease-in-out;
+	}
+
+	.feedback-error::before {
+		content: '';
+		@apply absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent;
+	}
+
+	.feedback-error p {
+		@apply relative z-10 m-0 flex items-center gap-3 font-medium text-red-800;
+		@apply text-sm leading-relaxed;
+	}
+
+	/* Text color classes */
+	.text {
+		&--primary {
+			@apply text-primary;
+		}
+		&--secondary {
+			@apply text-secondary;
+		}
+		&--tertiary {
+			@apply text-tertiary;
+		}
+		&--black {
+			@apply text-black;
+		}
+		&--white {
+			@apply text-white;
+		}
+	}
+
+	/* Button text colors */
+	.buttonText {
+		&--primary {
+			@apply text-primary;
+		}
+		&--secondary {
+			@apply text-secondary;
+		}
+		&--tertiary {
+			@apply text-tertiary;
+		}
+		&--black {
+			@apply text-black;
+		}
+		&--white {
+			@apply text-white;
+		}
+		&--transparent {
+			@apply text-transparent;
+		}
+	}
+
+	.buttonTextActive {
+		&--primary {
+			@apply hover:text-primary;
+		}
+		&--secondary {
+			@apply hover:text-secondary;
+		}
+		&--tertiary {
+			@apply hover:text-tertiary;
+		}
+		&--black {
+			@apply hover:text-black;
+		}
+		&--white {
+			@apply hover:text-white;
+		}
+		&--transparent {
+			@apply hover:text-transparent;
+		}
+	}
+
+	.buttonBg {
+		&--primary {
+			@apply bg-primary;
+		}
+		&--secondary {
+			@apply bg-secondary;
+		}
+		&--tertiary {
+			@apply bg-tertiary;
+		}
+		&--black {
+			@apply bg-black;
+		}
+		&--white {
+			@apply bg-white;
+		}
+		&--transparent {
+			@apply bg-transparent;
+		}
+	}
+
+	.buttonBgActive {
+		&--primary {
+			@apply hover:bg-primary;
+		}
+		&--secondary {
+			@apply hover:bg-secondary;
+		}
+		&--tertiary {
+			@apply hover:bg-tertiary;
+		}
+		&--black {
+			@apply hover:bg-black;
+		}
+		&--white {
+			@apply hover:bg-white;
+		}
+		&--transparent {
+			@apply hover:bg-transparent;
+		}
+	}
+
+	.buttonBorder {
+		&--primary {
+			@apply border-primary;
+		}
+		&--secondary {
+			@apply border-secondary;
+		}
+		&--tertiary {
+			@apply border-tertiary;
+		}
+		&--black {
+			@apply border-black;
+		}
+		&--white {
+			@apply border-white;
+		}
+		&--transparent {
+			@apply border-transparent;
+		}
+	}
+
+	.buttonBorderActive {
+		&--primary {
+			@apply hover:border-primary;
+		}
+		&--secondary {
+			@apply hover:border-secondary;
+		}
+		&--tertiary {
+			@apply hover:border-tertiary;
+		}
+		&--black {
+			@apply hover:border-black;
+		}
+		&--white {
+			@apply hover:border-white;
+		}
+		&--transparent {
+			@apply hover:border-transparent;
+		}
+	}
+</style>
+
+<script>
+	// Enhanced form handling with inline feedback
+	document.addEventListener('DOMContentLoaded', function () {
+		const forms = document.querySelectorAll(
+			'.contact-form[data-success-inline="true"]'
+		) as NodeListOf<HTMLFormElement>;
+
+		forms.forEach((form) => {
+			const feedback = form.querySelector('.form-feedback') as HTMLElement;
+			const successDiv = form.querySelector('.feedback-success') as HTMLElement;
+			const errorDiv = form.querySelector('.feedback-error') as HTMLElement;
+			const submitButton = form.querySelector(
+				'.form-button'
+			) as HTMLButtonElement;
+
+			if (!feedback || !successDiv || !errorDiv || !submitButton) return;
+
+			form.addEventListener('submit', async function (e) {
+				// Only prevent default for inline feedback forms
+				if (form.dataset.successInline === 'true') {
+					e.preventDefault();
+
+					// Show loading state
+					const originalText = submitButton.textContent || 'Nachricht senden';
+					submitButton.textContent = 'Wird gesendet...';
+					submitButton.disabled = true;
+
+					// Hide previous feedback
+					feedback.classList.add('hidden');
+					successDiv.classList.add('hidden');
+					errorDiv.classList.add('hidden');
+
+					try {
+						const formData = new FormData(form);
+
+						// Convert FormData to URLSearchParams for Netlify
+						const params = new URLSearchParams();
+						for (const [key, value] of formData.entries()) {
+							if (typeof value === 'string') {
+								params.append(key, value);
+							}
+						}
+
+						// Submit to Netlify
+						const response = await fetch('/', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+							body: params.toString(),
+						});
+
+						if (response.ok) {
+							// Show success message
+							feedback.classList.remove('hidden');
+							successDiv.classList.remove('hidden');
+							form.reset();
+						} else {
+							throw new Error('Network response was not ok');
+						}
+					} catch (error) {
+						// Show error message
+						feedback.classList.remove('hidden');
+						errorDiv.classList.remove('hidden');
+						console.error('Form submission error:', error);
+					} finally {
+						// Restore button state
+						submitButton.textContent = originalText;
+						submitButton.disabled = false;
+					}
+				}
+				// If successPage is set, let the form submit normally
+			});
+		});
+	});
+</script>

@@ -1,0 +1,122 @@
+---
+import { toRem } from '@lib/helpers';
+import SectionImage from '@components/SectionImage.astro';
+import type { BlockFeaturedComponentProps } from '@app-types/components.types';
+
+const {
+	items,
+	titleLevel,
+	titleFont,
+	titleColor,
+	titleSize,
+	titleAlign,
+	textFont,
+	textColor,
+	textSize,
+	textAlign,
+	spanMobile,
+	spanDesktop,
+	gapMobile,
+	gapDesktop,
+	gapHorizontalMobile,
+	gapHorizontalDesktop,
+	ratioMobile,
+	ratioDesktop,
+	fontTitleToggle,
+	fontTextToggle,
+	captionAlign,
+	captionControls,
+	captionOverlayRange,
+	captionColor,
+	global,
+	span,
+	metadata,
+} = Astro.props as BlockFeaturedComponentProps;
+
+const { lang } = Astro.params;
+
+// If no items, don't render anything
+const hasItems = items && items.length > 0;
+
+// Convert values to proper types
+const gapDesktopValue = toRem(parseInt(gapDesktop || '0'));
+const gapMobileValue = toRem(parseInt(gapMobile || '0'));
+const gapHorizontalDesktopValue = gapHorizontalDesktop
+	? toRem(parseInt(gapHorizontalDesktop))
+	: gapDesktopValue;
+const gapHorizontalMobileValue = gapHorizontalMobile
+	? toRem(parseInt(gapHorizontalMobile))
+	: gapMobileValue;
+
+// Filter and sort items (only if items exist)
+const displayItems = hasItems
+	? items
+			.filter((item) => item.status === 'listed')
+			.sort((a, b) => (a.position || 0) - (b.position || 0))
+	: [];
+---
+
+{
+	hasItems && (
+		<section
+			id={metadata?.identifier}
+			class:list={['blockFeatured', 'blocks', metadata?.classes]}
+			{...metadata?.attributes}
+		>
+			<div class="grid-default">
+				{displayItems.map((item) => (
+					<div
+						class:list={[
+							`featured-item`,
+							`col-span-${spanMobile}`,
+							`lg:col-span-${spanDesktop}`,
+						]}
+					>
+						<SectionImage
+							item={item as any}
+							global={global}
+							ratioMobile={ratioMobile || '1/1'}
+							ratioDesktop={ratioDesktop || '1/1'}
+							span={Number(span) || 12}
+							spanDesktop={Number(spanDesktop) || 12}
+							titleLevel={titleLevel}
+							titleFont={titleFont}
+							titleColor={titleColor}
+							titleSize={titleSize}
+							titleAlign={titleAlign}
+							textFont={textFont}
+							textColor={textColor}
+							textSize={textSize}
+							textAlign={textAlign}
+							fontTitleToggle={fontTitleToggle}
+							fontTextToggle={fontTextToggle}
+							captionAlign={captionAlign}
+							captionControls={captionControls}
+							captionOverlayRange={captionOverlayRange}
+							captionColor={captionColor}
+							titleClass="featured-title"
+							textClass="featured-text"
+							textContentClass="featured-text-content"
+							lang={lang}
+							backgroundContainer="container"
+						/>
+					</div>
+				))}
+			</div>
+		</section>
+	)
+}
+
+<style
+	lang="css"
+	define:vars={{
+		gapDesktop: gapDesktopValue,
+		gapMobile: gapMobileValue,
+		gapHorizontalDesktopValue,
+		gapHorizontalMobileValue,
+	}}
+>
+	.blockFeatured .grid-default {
+		@apply gap-x-[var(--gapHorizontalMobileValue)] gap-y-[var(--gapMobile)] lg:gap-x-[var(--gapHorizontalDesktopValue)] lg:gap-y-[var(--gapDesktop)];
+	}
+</style>

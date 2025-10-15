@@ -1,0 +1,197 @@
+---
+import type { BlockQuoteSliderComponentProps } from '@app-types/components.types';
+
+const {
+	items,
+	titleFont,
+	titleColor,
+	titleSize,
+	titleAlign,
+	textFont,
+	textColor,
+	textSize,
+	textAlign,
+	controls,
+	color,
+	time,
+	metadata,
+} = Astro.props as BlockQuoteSliderComponentProps;
+const hasControl = (control: string) => controls && controls.includes(control);
+const arrows = hasControl('arrows');
+const dots = hasControl('dots');
+---
+
+<sections
+	id={metadata?.identifier || undefined}
+	class:list={['blocks', 'blockQuoteSlider', metadata?.classes]}
+	{...metadata?.attributes}
+	data-controls={controls}
+	data-time={time}
+>
+	<div class="swiper swiperSlider">
+		<div class="swiper-wrapper items-center">
+			{
+				items?.map((item) => (
+					<div class:list={['swiper-slide']}>
+						<blockquote>
+							<div
+								set:html={item.text}
+								class:list={[
+									'quote',
+									'kirby-text',
+									`font--${textSize}`,
+									`text--${textColor}`,
+									`text--${textAlign}`,
+									'pt-4',
+								]}
+							/>
+						</blockquote>
+						<p>
+							<div
+								set:html={item.author}
+								class:list={[
+									'author',
+									'kirby-text',
+									`font--${titleSize}`,
+									`text--${titleColor}`,
+									`text--${titleAlign}`,
+									'pt-4',
+								]}
+							/>
+						</p>
+					</div>
+				))
+			}
+		</div>
+	</div>
+	<div class="swiper-controls">
+		{
+			dots && (
+				<div
+					class:list={['swiper-pagination', `swiper-pagination--${color}`]}
+				/>
+			)
+		}
+		{
+			arrows && (
+				<nav class="swiper-nav">
+					<button class:list={[`text--${color}`, 'swiper-left']}>
+						&#10094;
+					</button>
+					<button class:list={[`text--${color}`, 'swiper-right']}>
+						&#10095;
+					</button>
+				</nav>
+			)
+		}
+	</div>
+</sections>
+
+<script>
+	import Swiper, { Navigation, Autoplay, Pagination, EffectFade } from 'swiper';
+	import 'swiper/css/bundle';
+	import 'swiper/css/effect-fade';
+	Swiper.use([Navigation, Autoplay, Pagination, EffectFade]);
+
+	const blockQuoteSliders = document.querySelectorAll('.blockQuoteSlider');
+
+	blockQuoteSliders.forEach((blockQuoteSlider) => {
+		if (blockQuoteSlider instanceof HTMLElement) {
+			const controls = blockQuoteSlider?.dataset.controls;
+			const time = blockQuoteSlider?.dataset.time;
+			const autoplay = controls?.includes('autoplay');
+			if (time) {
+				const swiperSlider = blockQuoteSlider.querySelector('.swiperSlider');
+				new Swiper(swiperSlider as HTMLElement, {
+					...(autoplay && {
+						autoplay: {
+							delay: parseInt(time),
+						},
+					}),
+					centeredSlidesBounds: true,
+					loop: true,
+					navigation: {
+						nextEl: blockQuoteSlider.querySelector(
+							'.swiper-right'
+						) as HTMLElement,
+						prevEl: blockQuoteSlider.querySelector(
+							'.swiper-left'
+						) as HTMLElement,
+					},
+					pagination: {
+						el: blockQuoteSlider.querySelector(
+							'.swiper-pagination'
+						) as HTMLElement,
+						type: 'bullets',
+						clickable: true,
+					},
+				});
+			}
+		}
+	});
+</script>
+
+<style lang="css" define:vars={{ titleFont, textFont }}>
+	.swiper {
+		&-controls {
+			@apply mt-4 flex h-24 flex-col justify-between;
+		}
+
+		&-nav {
+			@apply flex justify-center gap-8 text-4xl;
+		}
+
+		&-pagination {
+			@apply relative bottom-auto top-auto;
+
+			&--primary {
+				.swiper-pagination-bullet-active,
+				.swiper-pagination-progressbar-fill {
+					@apply bg-primary;
+				}
+			}
+
+			&--secondary {
+				.swiper-pagination-bullet-active,
+				.swiper-pagination-progressbar-fill {
+					@apply bg-secondary;
+				}
+			}
+
+			&--tertiary {
+				.swiper-pagination-bullet-active,
+				.swiper-pagination-progressbar-fill {
+					@apply bg-tertiary;
+				}
+			}
+
+			&--black {
+				.swiper-pagination-bullet-active,
+				.swiper-pagination-progressbar-fill {
+					@apply bg-black;
+				}
+			}
+
+			&--white {
+				.swiper-pagination-bullet-active,
+				.swiper-pagination-progressbar-fill {
+					@apply bg-white;
+				}
+			}
+
+			&--transparent {
+				.swiper-pagination-bullet-active,
+				.swiper-pagination-progressbar-fill {
+					@apply bg-transparent;
+				}
+			}
+		}
+	}
+
+	.author {
+		font-family: var(--titleFont);
+	}
+	.quote {
+		font-family: var(--textFont);
+	}
+</style>

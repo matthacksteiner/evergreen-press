@@ -1,0 +1,40 @@
+---
+import ImageComponent from '@components/ImageComponent.astro';
+import type { BlockImageComponentProps } from '@app-types/components.types';
+
+const {
+	global,
+	image,
+	ratioMobile,
+	ratioDesktop,
+	span,
+	backgroundContainer,
+	lightbox,
+	metadata,
+	aboveFold,
+} = Astro.props as BlockImageComponentProps;
+
+const loadingStrategy = aboveFold ? 'eager' : 'lazy';
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blocks', 'blockImages', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	{
+		image?.url && (
+			<ImageComponent
+				global={global}
+				image={image}
+				loading={loadingStrategy}
+				ratioMobile={ratioMobile}
+				ratioDesktop={ratioDesktop}
+				backgroundContainer={backgroundContainer}
+				{...(lightbox ? { lightbox } : {})}
+				span={span}
+				aboveFold={aboveFold}
+			/>
+		)
+	}
+</div>

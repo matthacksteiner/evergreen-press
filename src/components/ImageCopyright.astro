@@ -1,0 +1,80 @@
+---
+import type { ImageCopyrightComponentProps } from '@app-types/components.types';
+
+const {
+	copyrighttitle: copyrightTitle,
+	copyrighttextfont: copyrightTextFont,
+	copyrighttextsize: copyrightTextSize,
+	copyrighttextcolor: copyrightTextColor,
+	copyrightposition: copyrightPosition,
+	copyrighbackgroundcolor: copyrightBackgroundColor,
+} = Astro.props as ImageCopyrightComponentProps;
+
+let positionClasses = '';
+switch (copyrightPosition) {
+	case 'topleft':
+		positionClasses = 'top-4 left-4';
+		break;
+	case 'topright':
+		positionClasses = 'top-4 right-4';
+		break;
+	case 'bottomleft':
+		positionClasses = 'bottom-4 left-4';
+		break;
+	case 'bottomright':
+		positionClasses = 'bottom-4 right-4';
+		break;
+	default:
+		positionClasses = 'top-4 right-4';
+}
+---
+
+<div
+	class:list={[
+		'copy-container',
+		'absolute',
+		'inline-flex',
+		'cursor-pointer',
+		'items-center',
+		'justify-center',
+		'rounded-full',
+		'border-2',
+		'bg-opacity-50',
+		'hover:bg-opacity-100',
+		'px-1',
+		'z-20',
+		`text--${copyrightTextColor}`,
+		`bg--${copyrightBackgroundColor}`,
+		`font--${copyrightTextSize}`,
+		positionClasses,
+	]}
+	style={`font-family: ${copyrightTextFont};`}
+>
+	<div class="copy-symbol pointer-events-none">©</div>
+	<div class="copy-text pointer-events-none hidden px-1">
+		{copyrightTitle}
+	</div>
+</div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const copyContainers = document.querySelectorAll('.copy-container');
+
+		copyContainers.forEach((container) => {
+			const copySymbol = container.querySelector('.copy-symbol');
+			const copyText = container.querySelector('.copy-text');
+
+			if (copySymbol && copyText) {
+				container.addEventListener('click', () => {
+					if (copySymbol.classList.contains('hidden')) {
+						copySymbol.classList.remove('hidden');
+						copyText.classList.add('hidden');
+					} else {
+						copySymbol.classList.add('hidden');
+						copyText.classList.remove('hidden');
+					}
+				});
+			}
+		});
+	});
+</script>

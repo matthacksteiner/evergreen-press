@@ -1,0 +1,139 @@
+---
+import type { LanguagePickerComponentProps } from '@app-types/components.types';
+const { global, class: className } =
+	Astro.props as LanguagePickerComponentProps;
+const { lang } = Astro.params;
+import { Icon } from 'astro-icon/components';
+import {
+	getLanguageContext,
+	getLocalizedPageUrl,
+	extractPageSlug,
+} from '@lib/api';
+import { checkIsHome } from '@lib/helpers';
+
+// Get language context
+const { allLangs, translations, currentLang, selectedLang } =
+	await getLanguageContext(lang);
+
+// UI-related props from global
+const headerFont = global.headerFont;
+const headerFontSize = global.headerFontSize;
+const headerColor = global.headerColor;
+const headerBackground = global.headerBackground;
+
+// Parse the current URL pathname
+const pathname = Astro.url.pathname.split('/').filter(Boolean);
+const isHome = checkIsHome(Astro);
+
+// Get current page slug
+const currentPageSlug = extractPageSlug({
+	pathname,
+	translations,
+	isHome,
+});
+
+// Pre-fetch all translated URLs
+const translatedUrls = await Promise.all(
+	allLangs
+		.filter((language) => language.code !== selectedLang.code)
+		.map(async (language) => ({
+			code: language.code,
+			url: await getLocalizedPageUrl({
+				targetLangCode: language.code,
+				currentLang,
+				currentPageSlug,
+				isHome,
+			}),
+		}))
+);
+---
+
+{
+	translations.length > 0 && (
+		<details class:list={['relative', className]}>
+			<summary class="flex cursor-pointer list-none items-center focus:outline-none">
+				<Icon name="language" aria-hidden="true" class="mr-2 h-4 w-4" />
+				<span class={`uppercase font--${headerFontSize} font-${headerFont}`}>
+					{selectedLang.code}
+				</span>
+				<Icon
+					name="chevron-down"
+					aria-hidden="true"
+					class="chevron ml-2 h-4 w-4 transition-transform duration-200"
+				/>
+			</summary>
+
+			<ul
+				class:list={[
+					`bg--${headerBackground}`,
+					`text--${headerColor}`,
+					'absolute',
+					'right-0',
+					'top-6',
+					'z-10',
+					'mt-2',
+					'py-2',
+					'w-16',
+					'rounded',
+					'shadow-lg',
+					'flex',
+					'flex-col',
+					'gap-2',
+					'uppercase',
+					'items-center',
+				]}
+			>
+				{translatedUrls.map(({ code, url }) => (
+					<li>
+						<a href={url} class="block hover:opacity-50">
+							{code}
+						</a>
+					</li>
+				))}
+			</ul>
+		</details>
+	)
+}
+
+<style>
+	details[open] .chevron {
+		transform: rotate(180deg);
+	}
+	.menu--active {
+		&.textActive {
+			&--primary {
+				@apply text-primary;
+			}
+			&--secondary {
+				@apply text-secondary;
+			}
+			&--tertiary {
+				@apply text-tertiary;
+			}
+			&--white {
+				@apply text-white;
+			}
+			&--black {
+				@apply text-black;
+			}
+		}
+
+		&.bgActive {
+			&--primary {
+				@apply bg-primary;
+			}
+			&--secondary {
+				@apply bg-secondary;
+			}
+			&--tertiary {
+				@apply bg-tertiary;
+			}
+			&--white {
+				@apply bg-white;
+			}
+			&--black {
+				@apply bg-black;
+			}
+		}
+	}
+</style>

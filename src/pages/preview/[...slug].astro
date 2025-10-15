@@ -1,0 +1,52 @@
+---
+export const prerender = false;
+
+import PageRenderer from '@components/PageRenderer.astro';
+import PreviewError from '@components/PreviewError.astro';
+import { loadPreviewData } from '@lib/preview';
+
+// Set environment variable for preview mode detection
+process.env.ASTRO_PATH = Astro.url.pathname;
+
+// Load preview data
+const { slug } = Astro.params;
+const {
+	pageData,
+	globalData,
+	errorState,
+	sectionPageData,
+	currentLangCode,
+	endpointSlug,
+} = await loadPreviewData(slug);
+---
+
+{
+	errorState ? (
+		<PreviewError
+			title="Preview Error"
+			message="Could not load preview. Please check the console for details."
+		/>
+	) : pageData && globalData ? (
+		sectionPageData ? (
+			<PageRenderer
+				slug={endpointSlug}
+				lang={currentLangCode}
+				data={pageData}
+				global={globalData}
+				page={sectionPageData}
+			/>
+		) : (
+			<PageRenderer
+				slug={endpointSlug}
+				lang={currentLangCode}
+				data={pageData}
+				global={globalData}
+			/>
+		)
+	) : (
+		<PreviewError
+			title="Data Loading Error"
+			message="Failed to load required data. Please check the console for details."
+		/>
+	)
+}

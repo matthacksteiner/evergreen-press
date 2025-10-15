@@ -1,0 +1,13 @@
+---
+import type { BlockCodeComponentProps } from '@app-types/components.types';
+
+const { code, metadata } = Astro.props as BlockCodeComponentProps;
+---
+
+<div
+	id={metadata?.identifier || undefined}
+	class:list={['blockCode', 'blocks', metadata?.classes]}
+	{...metadata?.attributes}
+>
+	<Fragment set:html={code} />
+</div>
