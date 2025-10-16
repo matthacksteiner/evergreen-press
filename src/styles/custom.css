@@ -24,6 +24,25 @@ Weiß (White):              #ffffff
 	@apply font-['bold'];
 }
 
+
+/*=============================================
+=            Header Styles            =
+=============================================*/
+header {
+	.c-hamburger{
+		@apply  rounded-full flex items-center justify-center bg-white p-4 w-16 h-16;
+		&:hover{
+			@apply bg-primary;
+			span.c-hamburger-bar {
+				@apply bg-white;
+			}
+		}
+		span.c-hamburger-bar {
+			@apply bg-primary;
+		}
+	}
+}
+
 /*=============================================
 =            Hero Block            =
 =============================================*/
@@ -55,7 +74,7 @@ Weiß (White):              #ffffff
 =            background words            =
 =============================================*/
 .bg-position,
-.bg-kunden,
+.bg-medien,
 .bg-team,
 .bg-contact {
 	@apply relative;
@@ -73,8 +92,8 @@ Weiß (White):              #ffffff
 	@apply content-['POSITION'];
 }
 
-.bg-kunden::before {
-	@apply content-['KUNDEN'];
+.bg-medien::before {
+	@apply content-['MEDIEN'];
 }
 
 .bg-team::before {
@@ -205,10 +224,10 @@ Weiß (White):              #ffffff
 	}
 
 	.text-content {
-		@apply absolute z-20 bottom-0 left-[calc(var(--circlePadding)/2)] max-w-[20%] px-[var(--circlePadding)] py-0;
+		@apply absolute bottom-0 left-[calc(var(--circlePadding)/2)] max-w-[20%] px-[var(--circlePadding)] py-0;
 
 		.caption {
-			@apply !text-white text-[var(--captionSize)] leading-[1.15];
+			@apply  text-[var(--captionSize)] leading-[1.15];
 		}
 	}
 }
@@ -216,6 +235,11 @@ Weiß (White):              #ffffff
 /*=============================================
 =            Kontakt Block            =
 =============================================*/
+
+#kontakt{
+	background-color: #EFF1EB;
+}
+
 .blockContactForm {
-	@apply bg-primary p-12 rounded-2xl;
+	@apply bg-[#CFD4D4] p-12 rounded-2xl;
 }

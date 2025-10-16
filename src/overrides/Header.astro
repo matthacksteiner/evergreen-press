@@ -1,0 +1,228 @@
+---
+import type { HeaderComponentProps } from '@app-types/components.types';
+import { toRem, isPreviewMode, ensureTrailingSlash } from '@lib/helpers';
+import Button from '@blocks/BlockButton.astro';
+import VectorImage from '@components/VectorImage.astro';
+import Hamburger from '@components/Hamburger.astro';
+import Navigation from '@components/Navigation.astro';
+import LanguagePicker from '@components/LanguagePicker.astro';
+import { Icon } from 'astro-icon/components';
+
+const { global, data, lang } = Astro.props as HeaderComponentProps;
+
+const headerActive = global.headerActive;
+const headerColor = global.headerColor;
+const headerBackground = global.headerBackground;
+const headerColorActive = global.headerColorActive;
+const headerBackgroundActive = global.headerBackgroundActive;
+
+const headerFont = global.headerFont;
+const headerFontSize = global.headerFontSize;
+
+const logoDesktop = toRem(global.logoDesktop) || '25rem';
+const logoDesktopActive = toRem(global.logoDesktopActive) || '12.5rem';
+
+const logoMobile = toRem(global.logoMobile) || '12.5rem';
+const logoMobileActive = toRem(global.logoMobileActive) || '6.25rem';
+
+const logoAlign = global.logoAlign;
+const logoFile = global.logoFile;
+const logoWidth = global.logoFile.width;
+const logoHeight = global.logoFile.height;
+const logoCta = global.logoCta;
+const currentLang = lang;
+const defaultLang = global.defaultLang.code;
+const translations = global.translations;
+const prefixDefaultLocale = global.prefixDefaultLocale;
+const isPreview = isPreviewMode();
+---
+
+{
+	headerActive === true ? (
+		<header
+			class:list={[
+				`bg--${headerBackground}`,
+				`text--${headerColor}`,
+				`textActive--${headerColorActive}`,
+				`bgActive--${headerBackgroundActive}`,
+				'fixed',
+				'z-20',
+				'w-full',
+				'py-4',
+				'transition-all',
+				'duration-300',
+				'ease-in-out',
+				'md:pb-8',
+				'md:pt-24',
+			]}
+		>
+			<div class="container flex items-center justify-between">
+				{logoAlign === 'center' ? (
+					<Button
+						link={logoCta}
+						global={global}
+						className={'hidden md:block'}
+					/>
+				) : null}
+				<div id="logo" class:list={['relative', 'z-20', 'max-md:py-4']}>
+					<a
+						href={`${isPreview ? '/preview' : ''}${
+							translations.length < 1 ||
+							(!prefixDefaultLocale && defaultLang === currentLang)
+								? '/'
+								: ensureTrailingSlash('/' + currentLang)
+						}`}
+						aria-label="Zurück zur Homepage"
+					>
+						{logoFile.src ? (
+							<VectorImage
+								image={{
+									url: logoFile.src,
+									source: logoFile.source,
+									alt: logoFile.alt
+										? `${logoFile.alt}`
+										: `Logo ${global.siteTitle}`,
+									width: logoWidth,
+									height: logoHeight,
+									identifier: 'logo',
+									classes: 'transition-all duration-300 ease-in-out',
+								}}
+								noLink={true}
+							/>
+						) : (
+							<Icon
+								name="fallback"
+								id="fallback"
+								class="transition-all duration-300 ease-in-out"
+								aria-label={global.siteTitle}
+							/>
+						)}
+					</a>
+				</div>
+				<nav
+					class:list={[
+						'nav-list',
+						`font--${headerFontSize}`,
+						'flex',
+						'transition-all',
+						'duration-300',
+						'ease-in-out',
+					]}
+				>
+					<Hamburger global={global} data={data} />
+					<Navigation global={global} data={data} />
+					{logoAlign !== 'center' ? (
+						<LanguagePicker global={global} class="hidden lg:flex" />
+					) : null}
+				</nav>
+			</div>
+		</header>
+	) : null
+}
+
+<style
+	lang="css"
+	define:vars={{
+		headerFont,
+		logoMobile,
+		logoDesktop,
+		logoDesktopActive,
+		logoMobileActive,
+	}}
+>
+	.nav-list {
+		font-family: var(--headerFont);
+	}
+	.header--active {
+		@apply py-0 shadow-lg lg:py-4;
+
+		&.textActive {
+			&--primary {
+				@apply text-primary;
+			}
+
+			&--secondary {
+				@apply text-secondary;
+			}
+
+			&--tertiary {
+				@apply text-tertiary;
+			}
+
+			&--white {
+				@apply text-white;
+			}
+
+			&--black {
+				@apply text-black;
+			}
+		}
+
+		&.bgActive {
+			&--primary {
+				@apply bg-primary;
+			}
+
+			&--secondary {
+				@apply bg-secondary;
+			}
+
+			&--tertiary {
+				@apply bg-tertiary;
+			}
+
+			&--white {
+				@apply bg-white;
+			}
+
+			&--black {
+				@apply bg-black;
+			}
+		}
+
+		#logo,
+		svg#fallback {
+			@apply w-[var(--logoMobileActive)] md:w-[var(--logoDesktopActive)];
+		}
+	}
+
+	#logo,
+	svg#fallback {
+		@apply w-[var(--logoMobile)] md:w-[var(--logoDesktop)];
+	}
+
+	[data-icon='fallback'] {
+		@apply h-auto w-[var(--logoMobile)] md:w-[var(--logoDesktop)];
+	}
+</style>
+
+<script>
+	const header = document.querySelector('header');
+	const hamburger = document.querySelector('.c-hamburger-inner');
+	const colorElement = document.querySelector('.c-hamburger');
+	const colorClass =
+		(colorElement &&
+			Array.from(colorElement.classList)
+				.find((className) => className.includes('hamburgerColorActive--'))
+				?.replace('Active', '')) ||
+		'';
+
+	if (header) {
+		window.onscroll = function () {
+			if (
+				document.body.scrollTop > 80 ||
+				document.documentElement.scrollTop > 80
+			) {
+				header.classList.add('header--active');
+				if (colorClass && hamburger) {
+					hamburger.classList.add(colorClass);
+				}
+			} else {
+				header.classList.remove('header--active');
+				if (colorClass && hamburger) {
+					hamburger.classList.remove(colorClass);
+				}
+			}
+		};
+	}
+</script>

@@ -1,0 +1,55 @@
+---
+import type { NavigationComponentProps } from '@app-types/components.types';
+import type { GlobalData } from '@app-types/api.types';
+import NavLinks from '@components/NavLinks.astro';
+
+interface Props {
+	data: Record<string, unknown>;
+	global: GlobalData & {
+		logoAlign: string;
+		navHeader: Array<{
+			label: string;
+			href: string;
+			active?: boolean;
+			children?: Array<{
+				label: string;
+				href: string;
+			}>;
+		}>;
+	};
+}
+
+const { data, global } = Astro.props as NavigationComponentProps;
+const logoAlign = 'center';
+---
+
+<div
+	class:list={[
+		'nav-links--desktop',
+		`headerColorCurrent--${global.headerColorCurrent}`,
+		`headerColorCurrentActive--${global.headerColorCurrentActive}`,
+		'items-center',
+		'hidden',
+		'lg:flex',
+		'lg:bg-transparent',
+		'top-0',
+		'left-0',
+		'z-10',
+		'min-h-full',
+		'w-full',
+		'justify-center',
+		'text-center',
+		'opacity-0',
+		'transition-opacity',
+		'duration-300',
+		'ease-in-out',
+		'placeholder:pointer-events-none',
+		'visible',
+		'flex-row',
+		'lg:justify-end',
+		'lg:opacity-100',
+		logoAlign === 'center' ? 'lg:hidden' : '',
+	]}
+>
+	<NavLinks links={global.navHeader} global={global} data={data} />
+</div>
