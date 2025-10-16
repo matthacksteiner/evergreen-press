@@ -105,49 +105,95 @@ Weiß (White):              #ffffff
 =============================================*/
 
 .blockImages.green-circle {
-	/* Circle scales with viewport using clamp. Tweak the three values as needed */
-	--circleSize: clamp(220px, 32vw, 560px);
+	/* Base fluid sizes; further tuned below with media queries */
+	--circleSize: clamp(240px, 34vw, 680px);
 	--circleColor: #8aa14a; /* primary */
-	--circlePadding: clamp(16px, 2.8vw, 40px);
+	--circlePadding: clamp(16px, 2.6vw, 44px);
+	--captionSize: clamp(20px, 2.1vw, 38px);
 }
 
 .blockImages.green-circle .relative {
 	position: relative;
+}
+.blockImages.green-circle figcaption {
+	transform: translateY(50%);
 }
 
 .blockImages.green-circle .relative::before {
 	content: '';
 	position: absolute;
 	left: 0;
-	bottom: -12%;
+	bottom: 0;
 	width: var(--circleSize);
 	height: var(--circleSize);
-	transform: translateX(-35%);
+	transform: translateX(-45%) translateY(50%);
 	background: var(--circleColor);
 	border-radius: 9999px;
 	z-index: 10;
+	pointer-events: none; /* do not capture scroll/touch on overlay */
 }
 
 /* Place caption inside the circle */
 .blockImages.green-circle .text-content {
 	position: absolute;
 	z-index: 20;
-	top: 50%;
+	bottom: 0;
 	left: calc(var(--circlePadding) / 2);
-	transform: translateY(-50%);
-	max-width: calc(var(--circleSize) - var(--circlePadding) * 2);
+	max-width: 20%;
 	padding: 0 var(--circlePadding);
 }
 
 /* Ensure caption text is readable inside the green circle */
 .blockImages.green-circle .text-content .caption {
 	color: #ffffff !important;
+	font-size: var(--captionSize);
+	line-height: 1.15;
 }
 
-/* Slightly adjust on very small screens so it doesn't overflow too much */
-@media (max-width: 480px) {
+/* 4K and ultra-wide */
+@media (min-width: 3840px) {
+	.blockImages.green-circle {
+		--circleSize: 1040px;
+		--circlePadding: 56px;
+		--captionSize: 48px;
+	}
+}
+
+/* Full HD and up (but below 4K) */
+@media (min-width: 1920px) and (max-width: 3839px) {
+	.blockImages.green-circle {
+		--circleSize: 720px;
+		--circlePadding: 48px;
+		--captionSize: 40px;
+	}
+}
+
+/* 1400×800 range and large laptops */
+@media (min-width: 1366px) and (max-width: 1919px) {
+	.blockImages.green-circle {
+		--circleSize: 560px;
+		--circlePadding: 40px;
+		--captionSize: 36px;
+	}
+}
+
+/* Tablets / small laptops */
+@media (max-width: 1024px) {
+	.blockImages.green-circle {
+		--circleSize: clamp(220px, 40vw, 460px);
+		--circlePadding: clamp(14px, 2.8vw, 28px);
+		--captionSize: clamp(18px, 2.8vw, 28px);
+	}
+}
+
+/* Phones */
+@media (max-width: 640px) {
+	.blockImages.green-circle {
+		--circleSize: 240px;
+		--circlePadding: 18px;
+		--captionSize: 20px;
+	}
 	.blockImages.green-circle .relative::before {
-		transform: translateX(-45%);
-		top: 8%;
+		transform: translateX(-48%) translateY(30%);
 	}
 }
