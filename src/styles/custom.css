@@ -9,6 +9,11 @@ Weiß (White):              #ffffff
 /*=============================================
 =            Global Styles            =
 =============================================*/
+html {
+	scroll-behavior: smooth;
+}
+
+
 .blockSlider img,
 .blockImages img,
 .blockVideo video,
