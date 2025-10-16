@@ -495,7 +495,9 @@ export default async function netlifyHybridImagesSetup({
 
 				fileEntries.push({ filePath, data });
 			} catch (error) {
-				logger.warn(`Skipping unreadable JSON file: ${filePath}`);
+				logger.warn(
+					`Skipping unreadable JSON file: ${filePath} - ${error.message}`
+				);
 			}
 		}
 

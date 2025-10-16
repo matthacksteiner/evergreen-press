@@ -132,7 +132,6 @@ const { blocks, global, span, backgroundContainer, data } = Astro.props;
 							borderWidth={block.content.borderwidth}
 							borderColor={block.content.bordercolor}
 							metadata={block.content.metadata}
-							metadata={block.content.metadata}
 						/>
 					);
 				case 'iconlist':
@@ -330,7 +329,9 @@ const { blocks, global, span, backgroundContainer, data } = Astro.props;
 							fieldSpacing={block.content.fieldSpacing}
 							formWidth={block.content.formWidth}
 							formAlign={block.content.formAlign}
-							textGroup={block.content.textGroup}
+							textFont={block.content.textfont}
+							textSize={block.content.textsize}
+							textColor={block.content.textcolor}
 							formBorderRadius={block.content.formBorderRadius}
 							buttonLocal={block.content.buttonLocal}
 							buttonSettings={block.content.buttonSettings}

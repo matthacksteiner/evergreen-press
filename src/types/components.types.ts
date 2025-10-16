@@ -414,12 +414,10 @@ export interface BlockContactFormComponentProps {
 	fieldSpacing?: 'small' | 'medium' | 'large';
 	formWidth?: 'full' | 'large' | 'medium' | 'small';
 	formAlign?: 'left' | 'center' | 'right';
+	textFont?: string;
+	textColor?: string;
+	textSize?: string;
 	formBorderRadius?: number;
-	textGroup?: {
-		textfont?: string;
-		textcolor?: string;
-		textsize?: string;
-	};
 	buttonLocal?: boolean;
 	buttonSettings?: ButtonSettings | null;
 	buttonColors?: ButtonColors | null;

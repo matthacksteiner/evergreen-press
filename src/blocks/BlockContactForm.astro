@@ -11,8 +11,10 @@ const {
 	fieldSpacing = 'medium',
 	formWidth = 'full',
 	formAlign = 'left',
+	textFont: textFontProp = '',
+	textSize: textSizeProp = '',
+	textColor: textColorProp = '',
 	formBorderRadius = 0,
-	textGroup = {},
 	buttonLocal = false,
 	buttonSettings = {},
 	buttonColors = {},
@@ -54,9 +56,9 @@ if (!messageConfig.label && !messageConfig.placeholder) {
 }
 
 // Calculate styling variables
-const textFont = textGroup?.textfont || global.textFont;
-const textColor = textGroup?.textcolor || global.textColor;
-const textSize = textGroup?.textsize || global.textSize;
+const textFont = textFontProp || global.textFont;
+const textColor = textColorProp || global.textColor;
+const textSize = textSizeProp || global.textSize;
 const formInputBorderRadius = toRem(formBorderRadius);
 const buttonFont =
 	buttonLocal && buttonSettings ? buttonSettings.buttonfont : global.buttonFont;
