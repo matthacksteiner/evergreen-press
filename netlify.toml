@@ -13,8 +13,12 @@ pretty_urls = true
 [build.environment]
 NODE_VERSION = "23"
 
+[dev]
+  autoLaunch = false
 [images]
 remote_images = [ "https://cms.baukasten.matthiashacksteiner.net/media/.*" ]
 
-[dev]
-  autoLaunch = false
+[[headers]]
+  for = "/media/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, must-revalidate"

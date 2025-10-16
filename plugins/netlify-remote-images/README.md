@@ -1,44 +1,69 @@
 # Netlify Remote Images Plugin
 
-This plugin automatically updates the `remote_images` setting in the `netlify.toml` file to use the `KIRBY_URL` from your environment variables.
+This Astro plugin automatically configures Netlify's remote image optimization by updating the
+`netlify.toml` file with the Kirby CMS media URL pattern.
 
-## How it works
+## Purpose
 
-1. Reads the `KIRBY_URL` from your `.env` file
-2. Updates the `netlify.toml` file's `remote_images` setting to point to `KIRBY_URL/media/.*`
-3. Provides console feedback about the update
+Enables Netlify's Image CDN to fetch and optimize images from the remote Kirby CMS instance, which
+is essential for the `/preview/` route where images are fetched directly from the CMS API.
+
+## How It Works
+
+1. Reads the `KIRBY_URL` environment variable
+2. Updates or creates the `[images]` section in `netlify.toml`
+3. Sets `remote_images = [ "{KIRBY_URL}/media/.*" ]`
+
+This allows Netlify's on-demand Image CDN to:
+
+- Fetch images from the remote Kirby CMS
+- Optimize them (AVIF, WebP, resizing)
+- Cache them at the edge
+- Serve them through `/.netlify/images` endpoint
 
 ## Usage
 
-Add the plugin to your `astro.config.mjs` file:
+The plugin is automatically enabled when imported in `astro.config.mjs`:
 
-```js
+```javascript
 import netlifyRemoteImages from './plugins/netlify-remote-images/index.js';
 
-// In your Astro config
 export default defineConfig({
-	integrations: [
-		netlifyRemoteImages({
-			// Optional configuration
-			enabled: true,
-			pattern: '/media/.*',
-		}),
-		// other integrations...
-	],
+  integrations: [
+    netlifyRemoteImages(),
+    // ... other integrations
+  ],
 });
 ```
 
-Make sure your `.env` file has the `KIRBY_URL` variable set:
+## Configuration
 
+No options are required. The plugin uses the `KIRBY_URL` environment variable automatically.
+
+## When It Runs
+
+- **Hook**: `astro:config:setup` (early in the build process)
+- **Timing**: Before other plugins that depend on image configuration
+
+## Compatibility
+
+Works alongside `netlify-hybrid-images`:
+
+- **netlify-remote-images**: Enables preview mode image fetching
+- **netlify-hybrid-images**: Downloads images for production builds
+
+Both plugins can and should run together for optimal functionality.
+
+## Requirements
+
+- `KIRBY_URL` environment variable must be set
+- `netlify.toml` file must exist in project root
+
+## Example Output
+
+After running, `netlify.toml` will contain:
+
+```toml
+[images]
+remote_images = [ "https://cms.example.com/media/.*" ]
 ```
-KIRBY_URL=https://your-kirby-cms-url.com
-```
-
-## Configuration Options
-
-| Option    | Type    | Default       | Description                                          |
-| --------- | ------- | ------------- | ---------------------------------------------------- |
-| `enabled` | boolean | `true`        | Whether to enable/disable the plugin                 |
-| `pattern` | string  | `'/media/.*'` | The pattern to append to KIRBY_URL for remote_images |
-
-The plugin uses the `baukasten-utils` logger for consistent output and will run during the Astro build process to update the `netlify.toml` file automatically.

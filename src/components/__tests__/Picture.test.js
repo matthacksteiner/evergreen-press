@@ -231,11 +231,11 @@ describe('Picture Component', () => {
 		expect(result).toContain('&#38;w='); // HTML encoded &w=
 		expect(result).toContain('&#38;h='); // HTML encoded &h=
 		expect(result).toContain('&#38;fit=cover&#38;fm=avif&#38;q=70'); // HTML encoded parameters
+		expect(result).toContain('&#38;fit=cover&#38;fm=webp&#38;q=70'); // Additional WebP source
 
-		// Check for responsive srcset
+		// Check for responsive srcset (1x and 2x DPR values)
 		expect(result).toContain('1x,');
-		expect(result).toContain('2x,');
-		expect(result).toContain('3x');
+		expect(result).toContain('2x');
 	});
 
 	test('renders with Netlify Image API in development environment too', async () => {
@@ -462,10 +462,9 @@ describe('Picture Component', () => {
 		// Check for largest breakpoint (min-width: 1921px)
 		expect(result).toContain('media="(min-width: 1921px)"');
 
-		// Check that srcset contains 1x, 2x, and 3x DPR values for each source
+		// Check that srcset contains 1x and 2x DPR values for each source
 		expect(result).toContain('1x,');
-		expect(result).toContain('2x,');
-		expect(result).toContain('3x');
+		expect(result).toContain('2x');
 
 		// Extract all source tags and verify they have the expected structure
 		const sourceTagRegex =
@@ -481,16 +480,14 @@ describe('Picture Component', () => {
 		);
 		expect(mobileSource).toBeDefined();
 		expect(mobileSource).toContain('1x,');
-		expect(mobileSource).toContain('2x,');
-		expect(mobileSource).toContain('3x');
+		expect(mobileSource).toContain('2x');
 
 		const desktopSource = sourceTags.find((tag) =>
 			tag.includes('(min-width: 1921px)')
 		);
 		expect(desktopSource).toBeDefined();
 		expect(desktopSource).toContain('1x,');
-		expect(desktopSource).toContain('2x,');
-		expect(desktopSource).toContain('3x');
+		expect(desktopSource).toContain('2x');
 
 		// Verify width progression in one of the sources
 		const srcset = desktopSource.match(/srcset="([^"]+)"/)[1];
@@ -502,9 +499,8 @@ describe('Picture Component', () => {
 			return match ? parseInt(match[1], 10) : 0;
 		});
 
-		// DPR 2x should be roughly double 1x, and 3x should be roughly triple 1x
+		// DPR 2x should be roughly double 1x (component only generates 1x and 2x)
 		expect(widths[1]).toBeGreaterThan(widths[0] * 1.5);
-		expect(widths[2]).toBeGreaterThan(widths[0] * 2);
 
 		// Test with custom ratios to verify different sources are used
 		const customRatioContainer = await AstroContainer.create({

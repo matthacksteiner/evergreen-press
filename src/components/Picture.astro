@@ -253,17 +253,26 @@ function createNetlifyImageUrl(
 	source: string,
 	width: number,
 	height: number,
-	format = 'avif'
+	format?: string
 ): string {
-	return `/.netlify/images?url=${encodeURIComponent(
-		source
-	)}&w=${width}&h=${height}&fit=cover&fm=${format}&q=70`;
+	const params = new URLSearchParams();
+	params.set('url', source);
+	params.set('w', Math.round(width).toString());
+	params.set('h', Math.round(height).toString());
+	params.set('fit', 'cover');
+	if (format) {
+		params.set('fm', format);
+	}
+	params.set('q', '70');
+
+	return `/.netlify/images?${params.toString()}`;
 }
 
 function createProductionSrcSet(
 	source: string,
 	screenRange: (typeof screenRanges)[0],
-	isMobile: boolean
+	isMobile: boolean,
+	format: string
 ): string {
 	const ratio = isMobile ? ratioMobileValue : ratioDesktopValue;
 	const screenWidth = screenRange.maxWidth;
@@ -272,7 +281,7 @@ function createProductionSrcSet(
 		.map((dpr) => {
 			const imgWidth = calculateResponsiveImageWidth(screenWidth, span) * dpr;
 			const imgHeight = calculateImageHeight(imgWidth, ratio);
-			return `${createNetlifyImageUrl(source, imgWidth, imgHeight)} ${dpr}x`;
+			return `${createNetlifyImageUrl(source, imgWidth, imgHeight, format)} ${dpr}x`;
 		})
 		.join(', ');
 }
@@ -321,6 +330,34 @@ const fallbackSource = sourceMobile; // Use mobile source for fallback
 const fallbackSrc = useNetlifyImageProcessing
 	? createNetlifyImageUrl(fallbackSource, fallbackWidth, fallbackHeight)
 	: fallbackSource;
+
+const formatPreferences = useNetlifyImageProcessing
+	? [
+			{ format: 'avif', type: 'image/avif' },
+			{ format: 'webp', type: 'image/webp' },
+		]
+	: [];
+
+const pictureSources = screenRanges.flatMap((range, index) => {
+	const isMobile = index < mobileBreakpointIndex;
+	const source = isMobile ? sourceMobile : sourceDesktop;
+
+	if (!useNetlifyImageProcessing) {
+		return [
+			{
+				media: range.mediaQuery,
+				srcset: source,
+				type: undefined as string | undefined,
+			},
+		];
+	}
+
+	return formatPreferences.map(({ format, type }) => ({
+		media: range.mediaQuery,
+		srcset: createProductionSrcSet(source, range, isMobile, format),
+		type,
+	}));
+});
 ---
 
 <div
@@ -334,21 +371,13 @@ const fallbackSrc = useNetlifyImageProcessing
 	}
 	<picture>
 		{
-			screenRanges.map((range, index) => {
-				const isMobile = index < mobileBreakpointIndex;
-				const source = isMobile ? sourceMobile : sourceDesktop;
-
-				return (
-					<source
-						srcset={
-							useNetlifyImageProcessing
-								? createProductionSrcSet(source, range, isMobile)
-								: source
-						}
-						media={range.mediaQuery}
-					/>
-				);
-			})
+			pictureSources.map((sourceDef) => (
+				<source
+					srcset={sourceDef.srcset}
+					media={sourceDef.media}
+					{...(sourceDef.type ? { type: sourceDef.type } : {})}
+				/>
+			))
 		}
 		<img
 			src={fallbackSrc}

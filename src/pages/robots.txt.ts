@@ -6,6 +6,7 @@ const robotsTxt = async (frontendUrl: string) =>
 User-agent: *
 Allow: /
 Disallow: /preview
+Disallow: /.netlify
 
 Sitemap: ${new URL('sitemap-index.xml', frontendUrl).href}
 `.trim();
@@ -14,7 +15,7 @@ export const GET: APIRoute = async () => {
 	const frontendUrl = await getFrontendUrl();
 	const normalizedUrl = frontendUrl.endsWith('/')
 		? frontendUrl
-		: `${frontendUrl  }/`;
+		: `${frontendUrl}/`;
 
 	return new Response(await robotsTxt(normalizedUrl), {
 		headers: {

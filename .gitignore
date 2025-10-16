@@ -44,4 +44,5 @@ src/pages/_[lang]
 public/fonts/
 # Synced content from Kirby CMS
 public/content/
+public/media/
 AGENTS.md

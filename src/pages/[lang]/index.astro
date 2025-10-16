@@ -1,0 +1,40 @@
+---
+import PageRenderer from '@components/PageRenderer.astro';
+import { getPage, getData, getAllPages } from '@lib/api';
+import type { GlobalData } from '@app-types/api.types';
+
+export async function getStaticPaths() {
+	// Load the pages using the API function instead of direct import
+	const pages = await getAllPages();
+
+	// Extract languages from the pages
+	const languages = new Set<string>();
+
+	// Process all pages to find available languages
+	pages.forEach((page) => {
+		if (page.translations) {
+			Object.keys(page.translations).forEach((lang) => {
+				languages.add(lang);
+			});
+		}
+	});
+
+	// Generate paths for all languages
+	return Array.from(languages).map((lang) => ({
+		params: {
+			lang,
+		},
+		props: {
+			lang,
+		},
+	}));
+}
+
+const { lang } = Astro.props;
+
+// Use API functions to get data
+const pageData = await getPage('home', lang);
+const globalData = await getData<GlobalData>(`/${lang}/global.json`);
+---
+
+<PageRenderer slug="home" lang={lang} data={pageData} global={globalData} />

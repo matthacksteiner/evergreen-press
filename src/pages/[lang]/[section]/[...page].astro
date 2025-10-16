@@ -1,0 +1,54 @@
+---
+import { getSections, getSection, getData } from '@lib/api';
+import PageRenderer from '@components/PageRenderer.astro';
+import type { GlobalData } from '@app-types/api.types';
+
+export async function getStaticPaths({ paginate }) {
+	// Get all section data directly
+	const globalData = await getData<GlobalData>('/global.json');
+	const languages = globalData.translations.map((lang) => lang.code);
+	const pageSize = globalData.paginationElements || 6;
+
+	// Create array to store all paginated paths
+	const allPaginatedPaths: any[] = [];
+
+	// Process each language
+	for (const lang of languages) {
+		// Get sections for this language
+		const sections = await getSections(lang);
+
+		// Process each section
+		for (const section of sections) {
+			// Get detailed data for this section including items
+			const sectionData = await getSection(section.uri, lang);
+
+			// Create pagination for this section's items
+			const paginatedData = paginate(sectionData.items || [], {
+				params: { lang, section: section.uri, page: [''] },
+				pageSize,
+				props: { sectionData, lang },
+			});
+
+			// Add to collection
+			allPaginatedPaths.push(...paginatedData);
+		}
+	}
+
+	return allPaginatedPaths;
+}
+
+// Access props from pagination
+const { page, sectionData, lang } = Astro.props;
+const { section } = Astro.params;
+
+// Get global data for the current language
+const globalData = await getData<GlobalData>(`/${lang}/global.json`);
+---
+
+<PageRenderer
+	slug={section}
+	lang={lang}
+	page={page}
+	data={sectionData}
+	global={globalData}
+/>

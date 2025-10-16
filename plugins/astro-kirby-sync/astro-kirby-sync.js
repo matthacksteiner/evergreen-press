@@ -75,6 +75,18 @@ function getSyncStateFilePath() {
 	return path.join(astroDir, 'kirby-sync-state.json');
 }
 
+function getHybridManifestPath() {
+	const netlifyDir = path.resolve('./.netlify');
+	ensureDirectoryExists(netlifyDir);
+	return path.join(netlifyDir, 'hybrid-images-manifest.json');
+}
+
+function getHybridMediaDir() {
+	const mediaDir = path.resolve('./public/media');
+	ensureDirectoryExists(mediaDir);
+	return mediaDir;
+}
+
 // Load sync state from disk
 function loadSyncState() {
 	const stateFile = getSyncStateFilePath();
@@ -467,10 +479,14 @@ export default {
 		);
 
 		const syncStateFile = getSyncStateFilePath();
+		const hybridManifestFile = getHybridManifestPath();
+		const hybridMediaDir = getHybridMediaDir();
 
 		try {
-			// Restore the sync state file from cache
+			// Restore cached sync state, manifest, and hybrid media assets
 			await utils.cache.restore(syncStateFile);
+			await utils.cache.restore(hybridManifestFile);
+			await utils.cache.restore(hybridMediaDir);
 
 			if (fs.existsSync(syncStateFile)) {
 				console.warn(
@@ -481,6 +497,23 @@ export default {
 			} else {
 				console.warn(
 					chalk.yellow('📦 [Netlify Build Plugin] No cached sync state found')
+				);
+			}
+
+			if (fs.existsSync(hybridManifestFile)) {
+				console.warn(
+					chalk.green(
+						'✅ [Netlify Build Plugin] Hybrid manifest restored from cache'
+					)
+				);
+			}
+
+			if (
+				fs.existsSync(hybridMediaDir) &&
+				fs.readdirSync(hybridMediaDir).length > 0
+			) {
+				console.warn(
+					chalk.green('✅ [Netlify Build Plugin] Hybrid media cache restored')
 				);
 			}
 		} catch (error) {
@@ -574,6 +607,8 @@ export default {
 		);
 
 		const syncStateFile = getSyncStateFilePath();
+		const hybridManifestFile = getHybridManifestPath();
+		const hybridMediaDir = getHybridMediaDir();
 
 		try {
 			if (fs.existsSync(syncStateFile)) {
@@ -587,6 +622,36 @@ export default {
 			} else {
 				console.warn(
 					chalk.yellow('⚠️ [Netlify Build Plugin] No sync state file to cache')
+				);
+			}
+
+			if (fs.existsSync(hybridManifestFile)) {
+				await utils.cache.save(hybridManifestFile);
+				console.warn(
+					chalk.green(
+						'✅ [Netlify Build Plugin] Hybrid manifest cached successfully'
+					)
+				);
+			} else {
+				console.warn(
+					chalk.yellow(
+						'⚠️ [Netlify Build Plugin] No hybrid manifest file to cache'
+					)
+				);
+			}
+
+			if (fs.existsSync(hybridMediaDir)) {
+				await utils.cache.save(hybridMediaDir);
+				console.warn(
+					chalk.green(
+						'✅ [Netlify Build Plugin] Hybrid media cached successfully'
+					)
+				);
+			} else {
+				console.warn(
+					chalk.yellow(
+						'⚠️ [Netlify Build Plugin] No hybrid media directory to cache'
+					)
 				);
 			}
 		} catch (error) {

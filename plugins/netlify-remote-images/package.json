@@ -1,13 +1,8 @@
 {
-	"name": "netlify-remote-images",
-	"version": "1.0.0",
-	"description": "Plugin to update netlify.toml remote_images setting with KIRBY_URL",
-	"type": "module",
-	"main": "netlifyRemoteImages.js",
-	"author": "Matthias Hacksteiner",
-	"license": "MIT",
-	"dependencies": {
-		"dotenv": "^16.3.1",
-		"kleur": "^4.1.5"
-	}
+  "name": "netlify-remote-images",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Updates netlify.toml remote_images setting based on KIRBY_URL",
+  "main": "index.js",
+  "private": true
 }
