@@ -6,15 +6,9 @@ Schwarz (Black):           #14302c
 Weiß (White):              #ffffff
 */
 
-/* --gridGapDesktop: 1.5rem; */
-/* --gridMarginDesktop: 4.4375rem; */
-
-/* 1778px */
-
 /*=============================================
 =            Global Styles            =
 =============================================*/
-
 .blockSlider img,
 .blockImages img,
 .blockVideo video,
@@ -26,20 +20,16 @@ Weiß (White):              #ffffff
 /*=============================================
 =            Font Styles            =
 =============================================*/
-
 .kirby-text strong {
-	font-family: 'bold';
+	@apply font-['bold'];
 }
 
 /*=============================================
 =            Hero Block            =
 =============================================*/
-
 #hero {
-	> .grid-default.container {
-		> section.column:first-of-type {
-			@apply lg:ml-[17.105%];
-		}
+	& > .grid-default.container > section.column:first-of-type {
+		@apply lg:ml-[17.105%];
 	}
 
 	#hero-button .column {
@@ -53,9 +43,10 @@ Weiß (White):              #ffffff
 			@apply w-16;
 		}
 	}
+
 	.hero-image {
 		.relative {
-			margin-right: calc(50% - 50vw);
+			@apply mr-[calc(50%-50vw)];
 		}
 	}
 }
@@ -63,47 +54,75 @@ Weiß (White):              #ffffff
 /*=============================================
 =            background words            =
 =============================================*/
+.bg-position,
+.bg-kunden,
+.bg-team,
+.bg-contact {
+	@apply relative;
 
-.bg-position {
-	position: relative;
+	&::before {
+		@apply absolute inset-0 flex items-center justify-center font-['bold'] leading-none text-[clamp(8rem,_18vw,_21.5rem)] text-[#eff1eb] tracking-[0.02em] z-0 pointer-events-none select-none;
+	}
+
+	& > * {
+		@apply relative z-[1];
+	}
 }
 
-.bg-position:before {
-	content: 'POSITION';
-	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-family: 'bold';
-	line-height: 1;
-	font-size: clamp(8rem, 18vw, 21.5rem);
-	color: #eff1eb; /* secondary */
-	letter-spacing: 0.02em;
-	z-index: 0;
-	pointer-events: none;
-	user-select: none;
+.bg-position::before {
+	@apply content-['POSITION'];
 }
 
-.bg-position > * {
-	position: relative;
-	z-index: 1;
+.bg-kunden::before {
+	@apply content-['KUNDEN'];
+}
+
+.bg-team::before {
+	@apply content-['TEAM'];
+}
+.bg-contact::before {
+	@apply content-['KONTAKT'];
 }
 
 /*=============================================
-=            feature grid            =
+=            Feature Grid            =
 =============================================*/
+#feature-grid > .blockColumns {
+	@apply [column-gap:calc(var(--gridGapDesktop)*4)];
+}
 
-#feature-grid {
-	> .blockColumns {
-		column-gap: calc(var(--gridGapDesktop) * 4);
+/*=============================================
+=            Team Block            =
+=============================================*/
+#team {
+	.blockImages {
+		@apply bg-primary rounded-t-2xl;
+
+		img {
+			@apply grayscale;
+		}
+
+		img:hover {
+			@apply grayscale-0;
+		}
+	}
+
+	.blockTitle {
+		@apply bg-[#d9d9d9] pt-4 px-4;
+	}
+
+	.blockText {
+		@apply bg-[#d9d9d9] px-4 pb-4 rounded-b-2xl;
+	}
+
+	.blocks ~ .blocks:not(.blockDivider) {
+		@apply mt-0;
 	}
 }
 
 /*=============================================
 =            Green Circle Image Overlay        =
 =============================================*/
-
 .blockImages.green-circle {
 	/* Base fluid sizes; further tuned below with media queries */
 	--circleSize: clamp(240px, 34vw, 680px);
@@ -184,16 +203,19 @@ Weiß (White):              #ffffff
 		--circlePadding: clamp(14px, 2.8vw, 28px);
 		--captionSize: clamp(18px, 2.8vw, 28px);
 	}
+
+	.text-content {
+		@apply absolute z-20 bottom-0 left-[calc(var(--circlePadding)/2)] max-w-[20%] px-[var(--circlePadding)] py-0;
+
+		.caption {
+			@apply !text-white text-[var(--captionSize)] leading-[1.15];
+		}
+	}
 }
 
-/* Phones */
-@media (max-width: 640px) {
-	.blockImages.green-circle {
-		--circleSize: 240px;
-		--circlePadding: 18px;
-		--captionSize: 20px;
-	}
-	.blockImages.green-circle .relative::before {
-		transform: translateX(-48%) translateY(30%);
-	}
+/*=============================================
+=            Kontakt Block            =
+=============================================*/
+.blockContactForm {
+	@apply bg-primary p-12 rounded-2xl;
 }
