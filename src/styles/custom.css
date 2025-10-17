@@ -159,6 +159,17 @@ header {
 	.blocks ~ .blocks:not(.blockDivider) {
 		@apply mt-0;
 	}
+
+	.team-icons {
+		position: absolute;
+		transform: translateY(-50%);
+		bottom: 0;
+		right: 0;
+
+		.icon {
+			@apply bg-primary p-3 rounded-full !w-10 xl:!w-12 !h-auto;
+		}
+	}
 }
 
 /*=============================================
