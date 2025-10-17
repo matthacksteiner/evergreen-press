@@ -185,8 +185,8 @@ const alignClass = {
 									? 'gap-6'
 									: 'gap-8';
 						return (
-							<div class:list={['flex', gapClass]}>
-								<div class="form-field flex-1">
+							<div class:list={['flex', 'flex-col', 'md:flex-row', gapClass]}>
+								<div class="form-field w-full md:flex-1">
 									<label
 										for={`${formId}-firstname`}
 										class:list={[
@@ -208,7 +208,7 @@ const alignClass = {
 										<p class="form-help">{firstnameConfig.help}</p>
 									)}
 								</div>
-								<div class="form-field flex-1">
+								<div class="form-field w-full md:flex-1">
 									<label
 										for={`${formId}-lastname`}
 										class:list={[
