@@ -167,7 +167,10 @@ header {
 		right: 0;
 
 		.icon {
-			@apply bg-primary p-3 rounded-full !w-10 xl:!w-12 !h-auto;
+			@apply bg-primary p-3 rounded-full !w-10 2xl:!w-12 !h-auto mr-2 transition-transform duration-200;
+			&:hover {
+				@apply scale-105;
+			}
 		}
 	}
 }
