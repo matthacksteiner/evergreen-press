@@ -13,6 +13,25 @@ html {
 	scroll-behavior: smooth;
 }
 
+.kirby-text {
+	a {
+		@apply no-underline relative overflow-hidden;
+
+		&::after {
+			content: '';
+			@apply absolute left-0 bottom-0 w-full h-1;
+			background-color: currentColor;
+			transform: scaleX(0);
+			transform-origin: left;
+			transition: transform 0.3s ease;
+		}
+
+		&:hover::after,
+		&:focus::after {
+			transform: scaleX(1);
+		}
+	}
+}
 
 .blockSlider img,
 .blockImages img,
@@ -29,14 +48,16 @@ html {
 	@apply font-['bold'];
 }
 
-
 /*=============================================
 =            Header Styles            =
 =============================================*/
 header {
-	.c-hamburger{
-		@apply  rounded-full flex items-center justify-center bg-white p-4 w-16 h-16;
-		&:hover{
+	#logo {
+		@apply md:max-2xl:w-48;
+	}
+	.c-hamburger {
+		@apply rounded-full flex items-center justify-center bg-white p-4 w-16 h-16;
+		&:hover {
 			@apply bg-primary;
 			span.c-hamburger-bar {
 				@apply bg-white;
@@ -64,13 +85,17 @@ header {
 		}
 
 		.button-arrow {
-			@apply w-16;
+			@apply w-10 md:w-16 transition-transform duration-200;
+		}
+		.button-arrow:hover,
+		.button-arrow:focus {
+			@apply scale-105;
 		}
 	}
 
 	.hero-image {
 		.relative {
-			@apply mr-[calc(50%-50vw)];
+			@apply md:mr-[calc(50%-50vw)];
 		}
 	}
 }
@@ -85,7 +110,7 @@ header {
 	@apply relative;
 
 	&::before {
-		@apply absolute inset-0 flex items-center justify-center font-['bold'] leading-none text-[clamp(8rem,_18vw,_21.5rem)] text-[#eff1eb] tracking-[0.02em] z-0 pointer-events-none select-none;
+		@apply absolute  inset-0 flex items-center justify-center font-['bold'] leading-none text-7xl md:text-[clamp(8rem,_18vw,_21.5rem)] text-[#eff1eb] tracking-[0.02em] z-0 pointer-events-none select-none;
 	}
 
 	& > * {
@@ -112,7 +137,7 @@ header {
 =            Feature Grid            =
 =============================================*/
 #feature-grid > .blockColumns {
-	@apply [column-gap:calc(var(--gridGapDesktop)*4)];
+	@apply md:[column-gap:calc(var(--gridGapDesktop)*4)];
 }
 
 /*=============================================
@@ -120,15 +145,7 @@ header {
 =============================================*/
 #team {
 	.blockImages {
-		@apply bg-primary rounded-t-2xl;
-
-		img {
-			@apply grayscale;
-		}
-
-		img:hover {
-			@apply grayscale-0;
-		}
+		@apply bg-[#eff1eb] rounded-t-2xl;
 	}
 
 	.blockTitle {
@@ -155,6 +172,11 @@ header {
 	--captionSize: clamp(20px, 2.1vw, 38px);
 }
 
+.blockImages.green-circle img,
+.blockImages.green-circle .thumbhash {
+	@apply rounded-none;
+}
+
 .blockImages.green-circle .relative {
 	position: relative;
 }
@@ -163,27 +185,17 @@ header {
 }
 
 .blockImages.green-circle .relative::before {
+	@apply absolute left-0 bottom-1/3 md:bottom-0 z-[10] pointer-events-none rounded-full;
 	content: '';
-	position: absolute;
-	left: 0;
-	bottom: 0;
 	width: var(--circleSize);
 	height: var(--circleSize);
 	transform: translateX(-45%) translateY(50%);
 	background: var(--circleColor);
-	border-radius: 9999px;
-	z-index: 10;
-	pointer-events: none; /* do not capture scroll/touch on overlay */
 }
 
 /* Place caption inside the circle */
 .blockImages.green-circle .text-content {
-	position: absolute;
-	z-index: 20;
-	bottom: 0;
-	left: calc(var(--circlePadding) / 2);
-	max-width: 20%;
-	padding: 0 var(--circlePadding);
+	@apply absolute z-20 bottom-1/3 md:bottom-0 left-[calc(var(--circlePadding)_/_2)] max-w-[20%] px-1 md:px-[var(--circlePadding)] py-0;
 }
 
 /* Ensure caption text is readable inside the green circle */
@@ -196,9 +208,9 @@ header {
 /* 4K and ultra-wide */
 @media (min-width: 3840px) {
 	.blockImages.green-circle {
-		--circleSize: 1040px;
+		--circleSize: 1640px;
 		--circlePadding: 56px;
-		--captionSize: 48px;
+		--captionSize: 128px;
 	}
 }
 
@@ -207,7 +219,7 @@ header {
 	.blockImages.green-circle {
 		--circleSize: 720px;
 		--circlePadding: 48px;
-		--captionSize: 40px;
+		--captionSize: 48px;
 	}
 }
 
@@ -227,24 +239,26 @@ header {
 		--circlePadding: clamp(14px, 2.8vw, 28px);
 		--captionSize: clamp(18px, 2.8vw, 28px);
 	}
-
-	.text-content {
-		@apply absolute bottom-0 left-[calc(var(--circlePadding)/2)] max-w-[20%] px-[var(--circlePadding)] py-0;
-
-		.caption {
-			@apply  text-[var(--captionSize)] leading-[1.15];
-		}
-	}
 }
 
 /*=============================================
 =            Kontakt Block            =
 =============================================*/
 
-#kontakt{
-	background-color: #EFF1EB;
+#kontakt {
+	background-color: #eff1eb;
 }
 
 .blockContactForm {
 	@apply bg-[#CFD4D4] p-12 rounded-2xl;
+}
+
+/*=============================================
+=            Footer           =
+=============================================*/
+
+footer {
+	.blockVector {
+		@apply pt-3;
+	}
 }
