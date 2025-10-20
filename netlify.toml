@@ -10,6 +10,13 @@ package = "./plugins/astro-kirby-sync"
 [[plugins]]
 package = "./plugins/font-downloader"
 
+# Optimize function bundling
+[functions]
+node_bundler = "esbuild"
+# Exclude plugin directories from SSR bundle
+external_node_modules = ["chalk", "dotenv"]
+included_files = ["!plugins/**"]
+
 [build.processing.html]
 pretty_urls = true
 
