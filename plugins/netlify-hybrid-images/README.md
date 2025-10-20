@@ -50,13 +50,50 @@ Ensure the `KIRBY_URL` environment variable is available so the plugin can detec
 
 ### Caching Behaviour
 
-When `cacheManifest` is enabled, the plugin records remote ETags and last-modified headers in
-`.netlify/hybrid-images-manifest.json`. Subsequent builds reuse that metadata to send conditional
-requests and skip fetching assets that have not changed. Set `skipUnchanged` to `false` or
-`cacheManifest` to `false` to force a full re-download on every build.
+The plugin implements intelligent caching to minimize redundant downloads:
 
-**Note:** The manifest is stored in the `.netlify/` directory (not in `public/`), which is excluded
-from deployments and version control.
+#### How It Works
+
+1. **Manifest Storage**: Cache metadata is stored in `.netlify/hybrid-images-manifest.json`
+   - **Location**: `.netlify/` directory (excluded from deployments and version control)
+   - **Persistence**: Netlify preserves this directory between builds in the build cache
+   - **Contents**: ETags, Last-Modified headers, file sizes, and timestamps for each asset
+
+2. **Conditional Requests**: When an asset exists locally and has cached metadata:
+   - Plugin sends `If-None-Match` (ETag) and `If-Modified-Since` headers
+   - Kirby CMS responds with `304 Not Modified` if the asset hasn't changed
+   - Plugin skips re-downloading and updates the `checkedAt` timestamp
+
+3. **Cache Hit Rate**: The plugin logs cache performance statistics:
+   ```
+   ✓ Cache hit: 145/150 assets (96.7% cached)
+   ```
+   A high cache hit rate (>80%) indicates the caching is working correctly.
+
+#### Troubleshooting Cache Issues
+
+If you see a low cache hit rate or frequent re-downloads:
+
+1. **Check Netlify Build Cache**: Ensure caching is enabled in your Netlify settings
+2. **Verify Manifest Persistence**: The plugin logs when loading the manifest:
+
+   ```
+   📋 Loaded manifest with 145 cached assets
+   ```
+
+   If you see "No existing manifest found" on every build, the cache isn't persisting.
+
+3. **Clear Cache**: If needed, you can clear Netlify's build cache from the Netlify UI
+   - Go to Site Settings → Build & Deploy → Build settings → Clear cache
+
+4. **Disable Caching Temporarily**: Set `skipUnchanged` to `false` to force full downloads:
+   ```js
+   netlifyHybridImages({
+     skipUnchanged: false, // Forces full download
+   });
+   ```
+
+**Note:** The manifest is NOT included in deployments—it's purely for build-time optimization.
 
 ### Retry Logic
 
@@ -97,10 +134,39 @@ This example sets a 7-day cache (`max-age=604800` seconds). Adjust as needed:
 
 The plugin will provide a helpful tip during builds if no cache headers are detected.
 
-## Netlify Notes
+## Netlify Integration
 
-- The plugin runs during `astro build`; the downloaded assets are emitted with the rest of the
-  static bundle and served from the Netlify CDN.
-- If any download fails, the plugin keeps the Kirby URLs untouched to avoid broken image references.
-- Ensure your Kirby CMS domain is configured in `netlify.toml` under `[images] remote_images` for
-  fallback scenarios and optimal Netlify Image CDN integration.
+### Build Process
+
+The plugin runs during `astro build` and integrates with Netlify's build cache:
+
+1. **Build Start**: Plugin loads the manifest from `.netlify/hybrid-images-manifest.json`
+2. **Asset Check**: For each media URL, checks if local copy exists and is current
+3. **Conditional Download**: Uses HTTP cache headers to skip unchanged files
+4. **Manifest Update**: Saves updated metadata back to `.netlify/` directory
+5. **Deployment**: Downloaded assets are included in the static bundle
+
+### Cache Persistence
+
+Netlify automatically preserves the `.netlify/` directory between builds:
+
+- First build: Downloads all assets, creates manifest (~0-5 minutes depending on asset count)
+- Subsequent builds: Validates cached assets using HTTP 304 responses (~10-30 seconds)
+- Cache cleared: Full re-download occurs (rare, usually manual action)
+
+### Error Handling
+
+- **Download Failure**: Plugin retries with exponential backoff (3 attempts by default)
+- **Persistent Failure**: Original Kirby URLs remain in content to avoid broken references
+- **Network Issues**: Automatic retry on timeouts, socket errors, and rate limits (429)
+
+### Fallback & Image CDN
+
+Ensure your Kirby CMS domain is configured in `netlify.toml` for fallback scenarios:
+
+```toml
+[images]
+remote_images = ["https://your-kirby-cms.com/.*"]
+```
+
+This allows Netlify's Image CDN to transform images even if the hybrid approach encounters issues.
