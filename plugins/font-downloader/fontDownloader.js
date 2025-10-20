@@ -1,13 +1,5 @@
-// Import the download function from the Netlify Build Plugin file
-import {
-	downloadFontsWithCache,
-	downloadFont,
-} from './font-downloader-netlify.js';
-import path from 'path';
-import fs from 'fs';
-import chalk from 'chalk';
-
 // Simple Astro integration for font-downloader
+// Note: Uses dynamic imports to avoid bundling Netlify plugin code into SSR
 export default function fontDownloader(userOptions = {}) {
 	const defaultOptions = {
 		timeout: 30000,
@@ -43,6 +35,13 @@ export default function fontDownloader(userOptions = {}) {
 				);
 
 				try {
+					// Dynamic import to avoid bundling into SSR
+					const { downloadFontsWithCache, downloadFont } = await import(
+						'./font-downloader-netlify.js'
+					);
+					const path = await import('path');
+					const fs = await import('fs');
+
 					const API_URL = process.env.KIRBY_URL;
 					if (!API_URL) {
 						logger.warn('⚠️  [Font Downloader] KIRBY_URL not set, skipping');
