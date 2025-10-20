@@ -3,9 +3,12 @@ command = "astro build"
 base = "/"
 publish = "dist"
 
-# Register the astro-kirby-sync as a Netlify Build Plugin
+# Register build plugins
 [[plugins]]
 package = "./plugins/astro-kirby-sync"
+
+[[plugins]]
+package = "./plugins/font-downloader"
 
 [build.processing.html]
 pretty_urls = true

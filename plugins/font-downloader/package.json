@@ -1,14 +1,17 @@
 {
-	"name": "font-downloader",
-	"version": "1.0.0",
-	"description": "Plugin to download web fonts from Kirby CMS for Astro projects",
-	"type": "module",
-	"main": "fontDownloader.js",
-	"author": "Matthias Hacksteiner",
-	"license": "MIT",
-	"dependencies": {
-		"chalk": "^5.3.0",
-		"dotenv": "^16.3.1",
-		"node-fetch": "^3.3.2"
-	}
+  "name": "font-downloader",
+  "version": "2.0.0",
+  "description": "Plugin to download web fonts from Kirby CMS for Astro projects with Netlify caching support",
+  "type": "module",
+  "main": "font-downloader-netlify.js",
+  "author": "Matthias Hacksteiner",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2"
+  },
+  "peerDependencies": {
+    "astro": "^4.0.0"
+  }
 }

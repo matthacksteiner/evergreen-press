@@ -158,11 +158,13 @@ function transformContent(value, transformer) {
  * @param {string} asset.downloadUrl
  * @param {string} asset.filePath
  * @param {string} asset.localPath
+ * @param {string} asset.cacheKey
  * @param {ReturnType<typeof createPluginLogger>} logger
  * @param {number} maxRetries
  * @param {number} retryDelay
  * @param {number} timeout
- * @returns {Promise<boolean>}
+ * @param {boolean} skipUnchanged
+ * @returns {Promise<{status: 'downloaded'|'skipped'|'failed', metadata?: Object}>}
  */
 async function downloadAsset(
 	asset,
@@ -179,12 +181,20 @@ async function downloadAsset(
 	);
 	const shouldUseConditional = skipUnchanged && fileExists && hasMetadata;
 
+	// Build conditional headers for cache validation
 	const conditionalHeaders = {};
-	if (shouldUseConditional && asset.metadata.etag) {
-		conditionalHeaders['If-None-Match'] = asset.metadata.etag;
-	}
-	if (shouldUseConditional && asset.metadata.lastModified) {
-		conditionalHeaders['If-Modified-Since'] = asset.metadata.lastModified;
+	if (shouldUseConditional) {
+		if (asset.metadata.etag) {
+			conditionalHeaders['If-None-Match'] = asset.metadata.etag;
+		}
+		if (asset.metadata.lastModified) {
+			conditionalHeaders['If-Modified-Since'] = asset.metadata.lastModified;
+		}
+
+		// Log cache validation attempt for debugging
+		logger.info(
+			`🔍 Checking ${asset.localPath} (ETag: ${asset.metadata.etag?.substring(0, 10)}...)`
+		);
 	}
 
 	for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -197,20 +207,19 @@ async function downloadAsset(
 			// Set up timeout using AbortController
 			timeoutId = setTimeout(() => controller.abort(), timeout);
 
-			const headers = shouldUseConditional
-				? { ...conditionalHeaders }
-				: undefined;
+			const headers = shouldUseConditional ? conditionalHeaders : {};
 			const response = await fetch(asset.downloadUrl, {
 				signal: controller.signal,
 				headers,
 			});
 
+			// Handle 304 Not Modified - file hasn't changed
 			if (response.status === 304) {
 				const metadata = {
 					...(asset.metadata || {}),
 					checkedAt: new Date().toISOString(),
 				};
-				logger.info(`Skipped ${asset.localPath} (not modified)`);
+				logger.success(`✓ Cached ${asset.localPath} (not modified)`);
 				return { status: 'skipped', metadata };
 			}
 
@@ -240,15 +249,24 @@ async function downloadAsset(
 			await writeFile(asset.filePath, Buffer.from(arrayBuffer));
 
 			const now = new Date().toISOString();
+			const etag = response.headers.get('etag');
+			const lastModified = response.headers.get('last-modified');
+			const size = arrayBuffer.byteLength;
+
 			const metadata = {
-				etag: response.headers.get('etag') || undefined,
-				lastModified: response.headers.get('last-modified') || undefined,
-				size: arrayBuffer.byteLength,
+				etag: etag || undefined,
+				lastModified: lastModified || undefined,
+				size,
 				downloadedAt: now,
 				checkedAt: now,
 			};
 
-			logger.success(`Cached ${asset.localPath}`);
+			// Log with cache headers for debugging
+			const cacheInfo =
+				etag || lastModified
+					? ` (ETag: ${etag?.substring(0, 10) || 'none'}..., Size: ${(size / 1024).toFixed(1)}KB)`
+					: ` (Size: ${(size / 1024).toFixed(1)}KB)`;
+			logger.success(`⬇ Downloaded ${asset.localPath}${cacheInfo}`);
 			return { status: 'downloaded', metadata };
 		} catch (error) {
 			lastError = error;
@@ -425,8 +443,18 @@ export default async function netlifyHybridImagesSetup({
 			try {
 				const rawManifest = await readFile(manifestPath, 'utf8');
 				manifest = JSON.parse(rawManifest);
+				const manifestEntries = Object.keys(manifest).length;
+				if (manifestEntries > 0) {
+					logger.info(
+						`📋 Loaded manifest with ${manifestEntries} cached asset${
+							manifestEntries === 1 ? '' : 's'
+						}`
+					);
+				}
 			} catch (error) {
-				if (error.code !== 'ENOENT') {
+				if (error.code === 'ENOENT') {
+					logger.info('📋 No existing manifest found. Starting fresh cache.');
+				} else {
 					logger.warn(
 						`Unable to read cache manifest at ${manifestPath}. Rebuilding metadata.`
 					);
@@ -524,19 +552,31 @@ export default async function netlifyHybridImagesSetup({
 			skipUnchanged
 		);
 
+		// Log download statistics with clear cache performance indicators
+		const totalAssets = assetMap.size;
+		const cacheHitRate =
+			totalAssets > 0
+				? ((downloadResult.skipped / totalAssets) * 100).toFixed(1)
+				: '0.0';
+
 		if (downloadResult.success > 0) {
 			logger.info(
-				`Cached ${downloadResult.success} media asset${
+				`⬇  Downloaded ${downloadResult.success} new/modified asset${
 					downloadResult.success === 1 ? '' : 's'
-				} to /${options.mediaDir}`
+				}`
 			);
 		}
 
 		if (downloadResult.skipped > 0) {
-			logger.info(
-				`Skipped re-downloading ${downloadResult.skipped} cached asset${
-					downloadResult.skipped === 1 ? '' : 's'
-				}`
+			logger.success(
+				`✓ Cache hit: ${downloadResult.skipped}/${totalAssets} assets (${cacheHitRate}% cached)`
+			);
+		}
+
+		// Warn if cache hit rate is unusually low
+		if (totalAssets > 10 && downloadResult.skipped < totalAssets * 0.5) {
+			logger.warn(
+				`⚠  Low cache hit rate (${cacheHitRate}%). This might indicate manifest cache issues.`
 			);
 		}
 
