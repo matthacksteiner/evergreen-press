@@ -164,8 +164,30 @@ const loadingStrategy = aboveFold ? undefined : 'lazy';
 					blockSlider?.dataset.direction !== 'ltr' ? 'rtl' : 'ltr';
 				swiperSlider?.setAttribute('dir', direction);
 
+				// Calculate loop parameters for loop modes BEFORE creating swiperOptions
+				// This ensures proper loop behavior with responsive slidesPerView
+				let loopedSlidesCount: number | undefined = undefined;
+				const needsLoop = ticker || infinite;
+
+				if (needsLoop) {
+					const totalSlides =
+						blockSlider.querySelectorAll('.swiper-slide').length;
+					const maxSlidesPerView = Math.max(
+						parseFloat(viewMobile),
+						parseFloat(viewDesktop)
+					);
+					// For loop modes with responsive slidesPerView, set loopedSlides to the max
+					// slidesPerView to ensure Swiper creates enough duplicates
+					// This is crucial when slidesPerView changes via breakpoints
+					loopedSlidesCount = Math.max(
+						totalSlides,
+						Math.ceil(maxSlidesPerView)
+					);
+				}
+
 				// Configure Swiper options
 				const swiperOptions: Swiper.SwiperOptions = {
+					centeredSlides: ticker ? false : undefined,
 					centeredSlidesBounds: !ticker,
 					slidesPerView: parseFloat(viewMobile),
 					spaceBetween: parseInt(viewPaddingMobile),
@@ -194,22 +216,55 @@ const loadingStrategy = aboveFold ? undefined : 'lazy';
 				// Configure ticker mode
 				if (ticker) {
 					swiperOptions.loop = true;
+					swiperOptions.loopedSlides = loopedSlidesCount;
+					swiperOptions.watchSlidesProgress = true;
 					swiperOptions.speed = parseInt(time);
 					swiperOptions.autoplay = {
 						delay: 0,
 						disableOnInteraction: false,
 					};
 					swiperOptions.allowTouchMove = false;
-					swiperOptions.loopAdditionalSlides = 10;
+					// Ensure slidesPerGroup is 1 for smooth ticker animation
+					swiperOptions.slidesPerGroup = 1;
 				} else {
 					if (infinite) {
 						swiperOptions.loop = true;
+						swiperOptions.loopedSlides = loopedSlidesCount;
+						swiperOptions.watchSlidesProgress = true;
 					}
 
 					if (autoplay) {
 						swiperOptions.autoplay = {
 							delay: parseInt(time),
 						};
+					}
+				}
+
+				// For loop modes (ticker/infinite) with responsive slidesPerView, manually duplicate slides
+				// before Swiper initialization to ensure seamless infinite scrolling
+				// This fixes Swiper 9.x issue where it doesn't create enough duplicates for responsive breakpoints
+				if (needsLoop) {
+					const wrapper = swiperSlider?.querySelector('.swiper-wrapper');
+					const slides = wrapper?.querySelectorAll('.swiper-slide');
+					const totalSlides = slides?.length || 0;
+					const maxSlidesPerView = Math.max(
+						parseFloat(viewMobile),
+						parseFloat(viewDesktop)
+					);
+
+					// Only duplicate if we have fewer slides than needed for smooth loop
+					// Duplicate enough times to cover at least 2x the max slidesPerView
+					const neededDuplicates = Math.ceil(maxSlidesPerView * 2);
+					if (totalSlides > 0 && totalSlides < neededDuplicates) {
+						const duplicationsNeeded = Math.ceil(
+							neededDuplicates / totalSlides
+						);
+						for (let i = 0; i < duplicationsNeeded; i++) {
+							slides?.forEach((slide) => {
+								const clone = slide.cloneNode(true) as HTMLElement;
+								wrapper?.appendChild(clone);
+							});
+						}
 					}
 				}
 
