@@ -16,6 +16,7 @@
     "format:check": "prettier --check . --ignore-path .gitignore",
     "test": "vitest",
     "test:sync": "node plugins/astro-kirby-sync/test-incremental-sync.js",
+    "smoke-test": "bash scripts/smoke-test.sh",
     "clean": "rimraf public/content",
     "clean:images": "rimraf public/media",
     "clean:fonts": "rimraf public/fonts",

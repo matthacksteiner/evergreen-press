@@ -4,6 +4,21 @@ import fetch from 'node-fetch';
 import chalk from 'chalk';
 import { createHash } from 'crypto';
 
+// Simple timing helper
+function createTimer() {
+	const start = performance.now();
+	return {
+		end() {
+			const elapsed = performance.now() - start;
+			if (elapsed < 1000) return `${Math.round(elapsed)}ms`;
+			if (elapsed < 60000) return `${(elapsed / 1000).toFixed(2)}s`;
+			const minutes = Math.floor(elapsed / 60000);
+			const seconds = ((elapsed % 60000) / 1000).toFixed(0);
+			return `${minutes}m ${seconds}s`;
+		},
+	};
+}
+
 // Helper function to generate SHA-256 hash of content
 function generateContentHash(content) {
 	return createHash('sha256').update(JSON.stringify(content)).digest('hex');
@@ -126,6 +141,61 @@ function saveSyncState(state) {
 	}
 }
 
+// Clean up orphaned files that are no longer in CMS
+function cleanOrphanedFiles(contentDir, syncedFiles, logger) {
+	let removedCount = 0;
+
+	function walkDirectory(dir) {
+		if (!fs.existsSync(dir)) return;
+
+		const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+		for (const entry of entries) {
+			const fullPath = path.join(dir, entry.name);
+			const relativePath = path.relative(contentDir, fullPath);
+
+			if (entry.isDirectory()) {
+				walkDirectory(fullPath);
+
+				// Remove empty directories
+				try {
+					const remainingEntries = fs.readdirSync(fullPath);
+					if (remainingEntries.length === 0) {
+						fs.rmdirSync(fullPath);
+					}
+				} catch {
+					// Ignore errors when checking/removing directories
+				}
+			} else if (entry.isFile() && entry.name.endsWith('.json')) {
+				// Check if this file was synced
+				if (!syncedFiles.has(relativePath)) {
+					try {
+						fs.unlinkSync(fullPath);
+						removedCount++;
+						logger.info(
+							chalk.gray(`  ↳ Removed orphaned file: ${relativePath}`)
+						);
+					} catch (error) {
+						logger.warn(
+							chalk.yellow(
+								`  ↳ Failed to remove ${relativePath}: ${error.message}`
+							)
+						);
+					}
+				}
+			}
+		}
+	}
+
+	walkDirectory(contentDir);
+
+	if (removedCount > 0) {
+		logger.info(chalk.green(`🧹 Cleaned up ${removedCount} orphaned file(s)`));
+	}
+
+	return removedCount;
+}
+
 // Check if content has changed by comparing hashes
 function hasContentChanged(url, newContent, oldHashes) {
 	const newHash = generateContentHash(newContent);
@@ -145,6 +215,7 @@ async function performIncrementalLanguageSync(
 	const langDir = lang ? path.join(contentDir, lang) : contentDir;
 	let changedFiles = 0;
 	let totalFiles = 0;
+	const syncedFiles = new Set();
 
 	// Ensure language directory exists
 	ensureDirectoryExists(langDir);
@@ -155,6 +226,9 @@ async function performIncrementalLanguageSync(
 	totalFiles++;
 
 	const globalFilePath = path.join(langDir, 'global.json');
+	const globalRelativePath = path.relative(contentDir, globalFilePath);
+	syncedFiles.add(globalRelativePath);
+
 	const globalContentChanged = hasContentChanged(
 		globalUrl,
 		globalData,
@@ -173,7 +247,9 @@ async function performIncrementalLanguageSync(
 
 		// Also save to root if this is the default language
 		if (!lang) {
-			saveJsonFile(path.join(contentDir, 'global.json'), globalData);
+			const rootGlobalPath = path.join(contentDir, 'global.json');
+			saveJsonFile(rootGlobalPath, globalData);
+			syncedFiles.add(path.relative(contentDir, rootGlobalPath));
 		}
 	}
 
@@ -183,6 +259,9 @@ async function performIncrementalLanguageSync(
 	totalFiles++;
 
 	const indexFilePath = path.join(langDir, 'index.json');
+	const indexRelativePath = path.relative(contentDir, indexFilePath);
+	syncedFiles.add(indexRelativePath);
+
 	const indexContentChanged = hasContentChanged(
 		indexUrl,
 		indexData,
@@ -201,7 +280,9 @@ async function performIncrementalLanguageSync(
 
 		// Also save to root if this is the default language
 		if (!lang) {
-			saveJsonFile(path.join(contentDir, 'index.json'), indexData);
+			const rootIndexPath = path.join(contentDir, 'index.json');
+			saveJsonFile(rootIndexPath, indexData);
+			syncedFiles.add(path.relative(contentDir, rootIndexPath));
 		}
 	}
 
@@ -243,6 +324,9 @@ async function performIncrementalLanguageSync(
 		totalFiles++;
 
 		const pageFilePath = path.join(langDir, `${page.uri}.json`);
+		const pageRelativePath = path.relative(contentDir, pageFilePath);
+		syncedFiles.add(pageRelativePath);
+
 		const pageContentChanged = hasContentChanged(
 			pageUrl,
 			pageData,
@@ -261,7 +345,9 @@ async function performIncrementalLanguageSync(
 
 			// Also save to root if this is the default language
 			if (!lang) {
-				saveJsonFile(path.join(contentDir, `${page.uri}.json`), pageData);
+				const rootPagePath = path.join(contentDir, `${page.uri}.json`);
+				saveJsonFile(rootPagePath, pageData);
+				syncedFiles.add(path.relative(contentDir, rootPagePath));
 			}
 		}
 
@@ -272,11 +358,12 @@ async function performIncrementalLanguageSync(
 		}
 	}
 
-	return { changedFiles, totalFiles };
+	return { changedFiles, totalFiles, syncedFiles };
 }
 
 // Perform full sync (fallback when incremental fails)
 async function performFullSync(API_URL, contentDir, logger) {
+	const timer = createTimer();
 	logger.info(chalk.blue('\n🔄 Performing full content sync...'));
 
 	// Clean existing content
@@ -354,12 +441,17 @@ async function performFullSync(API_URL, contentDir, logger) {
 	// Save sync state
 	saveSyncState(syncState);
 
-	logger.info(chalk.green('\n✨ Full content sync completed successfully!'));
+	logger.info(
+		chalk.green(
+			`\n✨ Full content sync completed successfully in ${timer.end()}`
+		)
+	);
 	return syncState;
 }
 
 // Perform incremental sync
 async function performIncrementalSync(API_URL, contentDir, logger) {
+	const timer = createTimer();
 	logger.info(chalk.blue('\n🔄 Performing incremental content sync...'));
 
 	// Load existing sync state
@@ -391,6 +483,7 @@ async function performIncrementalSync(API_URL, contentDir, logger) {
 
 	let totalChangedFiles = 0;
 	let totalFiles = 0;
+	const allSyncedFiles = new Set();
 
 	try {
 		// Fetch global data to get language information
@@ -411,6 +504,7 @@ async function performIncrementalSync(API_URL, contentDir, logger) {
 		);
 		totalChangedFiles += defaultStats.changedFiles;
 		totalFiles += defaultStats.totalFiles;
+		defaultStats.syncedFiles.forEach((f) => allSyncedFiles.add(f));
 
 		// ALSO check default language in its own language directory
 		logger.info(
@@ -427,6 +521,7 @@ async function performIncrementalSync(API_URL, contentDir, logger) {
 		);
 		totalChangedFiles += defaultLangDirStats.changedFiles;
 		totalFiles += defaultLangDirStats.totalFiles;
+		defaultLangDirStats.syncedFiles.forEach((f) => allSyncedFiles.add(f));
 
 		// Check translations
 		for (const lang of translations) {
@@ -442,7 +537,12 @@ async function performIncrementalSync(API_URL, contentDir, logger) {
 			);
 			totalChangedFiles += langStats.changedFiles;
 			totalFiles += langStats.totalFiles;
+			langStats.syncedFiles.forEach((f) => allSyncedFiles.add(f));
 		}
+
+		// Clean up orphaned files
+		logger.info(chalk.yellow(`\n🧹 Checking for orphaned files...`));
+		cleanOrphanedFiles(contentDir, allSyncedFiles, logger);
 
 		// Update sync state
 		syncState.lastSync = new Date().toISOString();
@@ -451,13 +551,13 @@ async function performIncrementalSync(API_URL, contentDir, logger) {
 		if (totalChangedFiles === 0) {
 			logger.info(
 				chalk.green(
-					`\n✨ Content is up-to-date! Checked ${totalFiles} files, no changes found.`
+					`\n✨ Content is up-to-date! Checked ${totalFiles} files, no changes found. (${timer.end()})`
 				)
 			);
 		} else {
 			logger.info(
 				chalk.green(
-					`\n✨ Incremental sync completed! Updated ${totalChangedFiles}/${totalFiles} files.`
+					`\n✨ Incremental sync completed! Updated ${totalChangedFiles}/${totalFiles} files in ${timer.end()}`
 				)
 			);
 		}
