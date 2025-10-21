@@ -77,6 +77,18 @@ header {
 		@apply lg:ml-[17.105%];
 	}
 
+	.main-headline .font--H1 {
+		@apply lg:max-xl:text-2xl;
+	}
+
+	.sub-headline .kirby-text {
+		@apply lg:max-xl:text-xl;
+	}
+
+	.blockDivider {
+		@apply lg:max-xl:pt-0;
+	}
+
 	#hero-button .column {
 		@apply flex flex-row items-center gap-6;
 
