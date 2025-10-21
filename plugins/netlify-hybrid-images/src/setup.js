@@ -8,6 +8,7 @@ import {
 	ensureDirectoryExists,
 	getProjectRoot,
 	handleNetlifyError,
+	sanitizePath,
 } from '../../baukasten-utils/index.js';
 import { validateNetlifyToml, checkCacheHeaders } from './validation.js';
 
@@ -72,20 +73,19 @@ function resolveMediaPath(url, { mediaPrefix, mediaDir, mediaOutputDir }) {
 		return null;
 	}
 
-	// Decode and normalise the Kirby media path
+	// Decode and sanitize the Kirby media path
 	const decodedPath = decodeURIComponent(rawPath);
-	const posixPath = path.posix.normalize(decodedPath);
 
-	// Prevent directory traversal outside the media directory
-	if (
-		posixPath.startsWith('../') ||
-		posixPath.includes('..\\') ||
-		posixPath === '..'
-	) {
+	// Use sanitizePath to prevent directory traversal
+	let sanitizedPath;
+	try {
+		sanitizedPath = sanitizePath(decodedPath, { fieldName: 'Media path' });
+	} catch (error) {
+		console.warn(`Invalid media path detected: ${error.message}`);
 		return null;
 	}
 
-	const segments = posixPath.split('/').filter(Boolean);
+	const segments = sanitizedPath.split('/').filter(Boolean);
 	if (!segments.length) {
 		return null;
 	}
@@ -311,6 +311,79 @@ async function downloadAsset(
 	}
 
 	return { status: 'failed' };
+}
+
+/**
+ * Clean up orphaned media files that are no longer referenced in the manifest
+ * @param {string} mediaOutputDir - Directory containing media files
+ * @param {Object} manifest - Manifest with tracked assets
+ * @param {ReturnType<typeof createPluginLogger>} logger
+ * @returns {number} Number of files removed
+ */
+function cleanOrphanedAssets(mediaOutputDir, manifest, logger) {
+	if (!fs.existsSync(mediaOutputDir)) {
+		return 0;
+	}
+
+	let removedCount = 0;
+	const trackedFiles = new Set();
+
+	// Build set of tracked file paths from manifest
+	for (const [cacheKey, entry] of Object.entries(manifest)) {
+		if (entry.localPath) {
+			// Extract filename from localPath (e.g., "/media/pages/xyz.jpg" -> "pages/xyz.jpg")
+			const filename = entry.localPath.replace(/^\/media\//, '');
+			trackedFiles.add(filename);
+		}
+	}
+
+	function walkDirectory(dir, relativePath = '') {
+		const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+		for (const entry of entries) {
+			const fullPath = path.join(dir, entry.name);
+			const relPath = relativePath
+				? path.join(relativePath, entry.name)
+				: entry.name;
+
+			if (entry.isDirectory()) {
+				walkDirectory(fullPath, relPath);
+
+				// Remove empty directories
+				try {
+					const remainingEntries = fs.readdirSync(fullPath);
+					if (remainingEntries.length === 0) {
+						fs.rmdirSync(fullPath);
+					}
+				} catch {
+					// Ignore errors
+				}
+			} else if (entry.isFile()) {
+				// Normalize path for comparison
+				const normalizedPath = relPath.split(path.sep).join('/');
+
+				if (!trackedFiles.has(normalizedPath)) {
+					try {
+						fs.unlinkSync(fullPath);
+						removedCount++;
+						logger.info(`Removed orphaned asset: ${normalizedPath}`);
+					} catch (error) {
+						logger.warn(
+							`Failed to remove orphaned asset ${normalizedPath}: ${error.message}`
+						);
+					}
+				}
+			}
+		}
+	}
+
+	walkDirectory(mediaOutputDir);
+
+	if (removedCount > 0) {
+		logger.success(`Cleaned up ${removedCount} orphaned asset(s)`);
+	}
+
+	return removedCount;
 }
 
 /**
@@ -607,6 +680,10 @@ export default async function netlifyHybridImagesSetup({
 					`Updated cache manifest at ${path.relative(projectRoot, manifestPath)}`
 				);
 			}
+
+			// Clean up orphaned assets that are no longer in manifest
+			logger.info('🧹 Checking for orphaned media assets...');
+			cleanOrphanedAssets(mediaOutputDir, manifest, logger);
 		}
 
 		if (downloadResult.failed > 0) {

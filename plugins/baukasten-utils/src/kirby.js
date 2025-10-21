@@ -6,6 +6,7 @@
 
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
+import { validateUrl } from './validation.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -13,11 +14,24 @@ dotenv.config();
 /**
  * Get the Kirby CMS URL from environment variables
  *
+ * @param {Object} options - Options
+ * @param {boolean} options.validate - Whether to validate the URL (default: true)
+ * @param {boolean} options.requireHttps - Whether to require HTTPS (default: false)
  * @returns {string|null} The Kirby URL without trailing slash or null if not set
  */
-export function getKirbyUrl() {
+export function getKirbyUrl({ validate = true, requireHttps = false } = {}) {
 	const url = process.env.KIRBY_URL;
 	if (!url) return null;
+
+	if (validate) {
+		try {
+			validateUrl(url, { requireHttps, fieldName: 'KIRBY_URL' });
+		} catch (error) {
+			throw new Error(
+				`Invalid KIRBY_URL environment variable: ${error.message}`
+			);
+		}
+	}
 
 	// Remove trailing slash if present
 	return url.endsWith('/') ? url.slice(0, -1) : url;
